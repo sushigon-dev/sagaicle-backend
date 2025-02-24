@@ -18,6 +18,7 @@
   {
   "tags": ["温泉", "ファミリー", "エンジョイ”]
   }
+  ```
 
 ### 失敗
 - HTTP/1.1 500 Internal Server Error
