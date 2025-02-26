@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"log"
 
+	"sagaicle-backend/GetTags"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/sushigon-dev/sagaicle-backend/GetTags"
 )
 
 func main() {
