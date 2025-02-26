@@ -13,7 +13,7 @@ import (
 
 func main() {
 
-	db, err := sql.Open("sqlite3", "./GetRoute.db")
+	db, err := sql.Open("sqlite3", "./database.db")
 
 	if err != nil {
 		log.Fatal("Database connection error:", err)
