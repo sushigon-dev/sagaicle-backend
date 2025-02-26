@@ -30,6 +30,11 @@ func GetTags(db *sql.DB) gin.HandlerFunc {
 			}
 			tags = append(tags, tag)
 		}
+
+		if len(tags) == 0 {
+			c.Status(http.StatusNoContent)
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{"tags": tags})
 	}
 }
