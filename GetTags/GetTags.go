@@ -16,7 +16,7 @@ type TagHandler struct {
 func (h *TagHandler) GetTags(c *gin.Context) {
 	var tags []string
 
-	rows, err := h.DB.Query("SELECT TAGS FROM tags")
+	rows, err := h.DB.Query("SELECT TAG FROM tags")
 	if err != nil {
 		log.Println("Query Error:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database query failed"})
