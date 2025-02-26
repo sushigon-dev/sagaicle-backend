@@ -6,7 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/sushigon-dev/sagaicle-backend/GetRoute"
 	"github.com/sushigon-dev/sagaicle-backend/GetTags"
+	//"github.com/sushigon-dev/sagaicle-backend/GetRoute"
 )
 
 func main() {
@@ -18,9 +20,12 @@ func main() {
 	}
 	defer db.Close()
 
-	router := gin.Default()
+	tagHandler := &GetTags.TagHandler{DB: db}
+	routeHandler := &GetRoute.RouteHandler{DB: db}
 
-	router.GET("/api/tags", GetTags.GetTags(db))
+	router := gin.Default()
+	router.GET("/api/tags", tagHandler.GetTags)
+	router.GET("/api/route/:id", routeHandler.GetRoute)
 
 	router.Run("localhost:8080")
 }
