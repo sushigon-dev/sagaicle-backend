@@ -1,4 +1,4 @@
-module sagaicle-backend
+module github.com/sushigon-dev/sagaicle-backend
 
 go 1.23.6
 
