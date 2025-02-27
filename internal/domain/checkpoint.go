@@ -1,4 +1,4 @@
-package model
+package domain
 
 // ルート内の各チェックポイントを表現
 type Checkpoint struct {

@@ -1,4 +1,4 @@
-package model
+package domain
 
 // 距離などの浮動小数点数の範囲を表現
 type RangeFloat struct {
