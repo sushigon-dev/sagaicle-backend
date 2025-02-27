@@ -5,7 +5,7 @@ import (
 	"github.com/sushigon-dev/sagaicle/internal/domain"
 )
 
-// CreateUser は新規ユーザーを登録します。
+// 新規ユーザーを登録
 func (r *SQLiteRepository) CreateUser(user *domain.User) error {
 	query := `
         INSERT INTO users (
@@ -20,7 +20,7 @@ func (r *SQLiteRepository) CreateUser(user *domain.User) error {
 	return err
 }
 
-// GetUserByID はユーザー ID によるユーザー情報取得を行います。
+// ユーザー ID によるユーザー情報取得
 func (r *SQLiteRepository) GetUserByID(id uuid.UUID) (*domain.User, error) {
 	query := `
         SELECT user_id, user_name, hashed_password, mileage, total_distance
@@ -47,7 +47,7 @@ func (r *SQLiteRepository) GetUserByID(id uuid.UUID) (*domain.User, error) {
 	return user, nil
 }
 
-// GetUserByUsername はユーザー名からユーザー情報を取得します。
+// ユーザー名からユーザー情報を取得
 func (r *SQLiteRepository) GetUserByUsername(username string) (*domain.User, error) {
 	query := `
         SELECT user_id, user_name, hashed_password, mileage, total_distance
@@ -78,7 +78,7 @@ func (r *SQLiteRepository) GetUserByUsername(username string) (*domain.User, err
 	return user, nil
 }
 
-// AddBadgedRoute はユーザーが取得したバッジ付きルートの記録を追加します。
+// ユーザーが取得したバッジ付きルートの記録を追加
 func (r *SQLiteRepository) AddBadgedRoute(userID uuid.UUID, route domain.BadgedRoute) error {
 	query := `
         INSERT INTO badges (user_id, route_id, title)
