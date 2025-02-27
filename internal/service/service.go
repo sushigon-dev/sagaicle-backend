@@ -1,18 +1,18 @@
 package service
 
 import (
-	"database/sql"
-	"errors"
-	"time"
+	// "database/sql"
+	// "errors"
+	// "time"
 
-	"github.com/google/uuid"
-	"github.com/sushigon-dev/sagaicle/internal/domain"
+	// "github.com/google/uuid"
+	// "github.com/sushigon-dev/sagaicle/internal/domain"
 	repository "github.com/sushigon-dev/sagaicle/internal/repository/sqlite"
-	"golang.org/x/crypto/bcrypt"
+	// "golang.org/x/crypto/bcrypt"
 )
 
-// RouteService はルート関連のユースケースを扱います。
-type RouteService interface {
+// TagsService はルート関連のユースケースを扱います。
+type TagsService interface {
 	GetTags() ([]string, error)
 }
 
@@ -21,7 +21,7 @@ type routeService struct {
 }
 
 // NewRouteService は新たな RouteService を生成します。
-func NewRouteService(repo repository.TagsRepository) RouteService {
+func NewRouteService(repo repository.TagsRepository) TagsService {
 	return &routeService{repo: repo}
 }
 
