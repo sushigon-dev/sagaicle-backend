@@ -5,7 +5,7 @@ import (
 	"github.com/sushigon-dev/sagaicle/internal/domain"
 )
 
-// CreateCheckpoints は指定したルート ID に対するチェックポイント群を登録します。
+// 指定したルート ID に対するチェックポイント群を登録
 func (r *SQLiteRepository) CreateCheckpoints(routeID uuid.UUID, checkpoints []domain.Checkpoint) error {
 	// checkpoints テーブルは (route_id, checkpoint_index, name, lat, lng) を持つと想定
 	query := `
@@ -28,7 +28,7 @@ func (r *SQLiteRepository) CreateCheckpoints(routeID uuid.UUID, checkpoints []do
 	return tx.Commit()
 }
 
-// GetCheckpointsByRouteID はルート ID に紐づくチェックポイント群を取得します。
+// ルート ID に紐づくチェックポイント群を取得
 func (r *SQLiteRepository) GetCheckpointsByRouteID(routeID uuid.UUID) ([]domain.Checkpoint, error) {
 	query := `
         SELECT name, lat, lng
@@ -41,4 +41,14 @@ func (r *SQLiteRepository) GetCheckpointsByRouteID(routeID uuid.UUID) ([]domain.
 		return nil, err
 	}
 	return checkpoints, nil
+}
+
+// ユーザーが指定ルートのチェックポイント（インデックス指定）を訪問した記録を追加
+func (r *SQLiteRepository) VisitCheckpoint(userID, routeID uuid.UUID, checkpointIndex int) error {
+	query := `
+        INSERT INTO visited_checkpoints (user_id, route_id, checkpoint_index)
+        VALUES (?, ?, ?);
+    `
+	_, err := r.db.Exec(query, userID.String(), routeID.String(), checkpointIndex)
+	return err
 }

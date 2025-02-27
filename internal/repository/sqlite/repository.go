@@ -25,6 +25,7 @@ type RoutesRepository interface {
 type CheckpointsRepository interface {
 	CreateCheckpoints(routeID uuid.UUID, checkpoints []domain.Checkpoint) error
 	GetCheckpointsByRouteID(routeID uuid.UUID) ([]domain.Checkpoint, error)
+	VisitCheckpoint(userID, routeID uuid.UUID, checkpointIndex int) error
 }
 
 // ユーザーに関する操作を抽象化したインターフェース
