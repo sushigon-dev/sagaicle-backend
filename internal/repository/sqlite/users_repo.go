@@ -77,3 +77,13 @@ func (r *SQLiteRepository) GetUserByUsername(username string) (*domain.User, err
 	}
 	return user, nil
 }
+
+// AddBadgedRoute はユーザーが取得したバッジ付きルートの記録を追加します。
+func (r *SQLiteRepository) AddBadgedRoute(userID uuid.UUID, route domain.BadgedRoute) error {
+	query := `
+        INSERT INTO badges (user_id, route_id, title)
+        VALUES (?, ?, ?);
+    `
+	_, err := r.db.Exec(query, userID.String(), route.ID, route.Title)
+	return err
+}
