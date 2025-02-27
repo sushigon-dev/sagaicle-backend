@@ -27,6 +27,13 @@ type CheckpointsRepository interface {
 	GetCheckpointsByRouteID(routeID uuid.UUID) ([]domain.Checkpoint, error)
 }
 
+// ユーザーに関する操作を抽象化したインターフェース
+type UsersRepository interface {
+	CreateUser(user *domain.User) error
+	GetUserByID(id uuid.UUID) (*domain.User, error)
+	GetUserByUsername(username string) (*domain.User, error)
+}
+
 // sqlx.DB を利用したリポジトリ実装
 type SQLiteRepository struct {
 	db *sqlx.DB
