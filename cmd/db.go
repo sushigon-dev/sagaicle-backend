@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -12,6 +13,19 @@ func configDB() *sqlx.DB {
 	db, err := sqlx.Open("sqlite3", "./sagaicle.db")
 	if err != nil {
 		log.Fatalf("SQLite データベースのオープンに失敗しました: %v", err)
+	}
+
+	// init.sql の内容をファイルから読み込む
+	sqlBytes, err := os.ReadFile("init.sql")
+	if err != nil {
+		log.Fatal(err)
+	}
+	sqlStatements := string(sqlBytes)
+
+	// 初期化スクリプトを実行
+	_, err = db.Exec(sqlStatements)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// データベース接続確認
