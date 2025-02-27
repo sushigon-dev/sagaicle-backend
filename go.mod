@@ -7,6 +7,8 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.24
 )
 
+require github.com/google/uuid v1.6.0
+
 require (
 	github.com/bytedance/sonic v1.12.9 // indirect
 	github.com/bytedance/sonic/loader v0.2.3 // indirect

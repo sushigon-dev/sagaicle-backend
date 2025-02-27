@@ -63,7 +63,7 @@ func (h *SearchHandler) SearchRoutes(c *gin.Context) {
 	}
 
 	// SQL クエリの作成
-	query := `SELECT ID, TITLE, DESCRIPTION, DISTANCE, TIME, TAGS, LIKES, IMAGE, UPDATE_AT FROM SearchRoutes WHERE 1=1`
+	query := `SELECT ID, TITLE, DESCRIPTION, DISTANCE, TIME, TAGS, LIKES, IMAGE, UPDATE_AT FROM routes WHERE 1=1`
 	args := []interface{}{}
 
 	// 距離のフィルタ
@@ -90,8 +90,10 @@ func (h *SearchHandler) SearchRoutes(c *gin.Context) {
 	if len(req.Tags) > 0 {
 		tagConditions := []string{}
 		for _, tag := range req.Tags {
-			tagConditions = append(tagConditions, "tags LIKE ?")
-			args = append(args, "%"+tag+"%")
+
+			tagConditions = append(tagConditions, "(',' || tags || ',') LIKE ?")
+			args = append(args, "%,"+tag+",%")
+
 		}
 
 		switch req.SearchOption {
@@ -154,3 +156,17 @@ func (h *SearchHandler) SearchRoutes(c *gin.Context) {
 	}
 	c.IndentedJSON(http.StatusOK, response)
 }
+
+/* リクエストの際のフォーマット */
+/*
+curl -X POST "http://localhost:8080/api/search" \
+     -H "Content-Type: application/json" \
+     -d '{
+           "distance": { "min": 0, "max": 20000},
+           "time": { "min": 0, "max": 1800 },
+           "tags": ["mountain", "scenic", "hiking", "nature"],
+           "search_option": "OR",
+           "sort": { "order": "desc" },
+           "limit": 10
+         }'
+*/
