@@ -1,31 +1,58 @@
 package service
 
 import (
-	// "database/sql"
-	// "errors"
-	// "time"
-
-	// "github.com/google/uuid"
-	// "github.com/sushigon-dev/sagaicle/internal/domain"
-	repository "github.com/sushigon-dev/sagaicle/internal/repository/sqlite"
-	// "golang.org/x/crypto/bcrypt"
+	"github.com/google/uuid"
+	"github.com/sushigon-dev/sagaicle/internal/domain"
+	"github.com/sushigon-dev/sagaicle/internal/repository/sqlite"
 )
 
-// TagsService はルート関連のユースケースを扱います。
+// チェックポイント関連のユースケースを扱う
+type CheckpointsService interface {
+	VisitCheckpoint(userID, routeID uuid.UUID, checkpointIndex int) error
+}
+
+type checkpointsService struct {
+	repo sqlite.CheckpointsRepository
+}
+
+// いいね関連のユースケースを扱う
+type LikesService interface {
+	LikeRoute(userID, routeID uuid.UUID) error
+	DislikeRoute(userID, routeID uuid.UUID) error
+	IsLiked(userID, routeID uuid.UUID) (bool, int, error)
+}
+
+type likesService struct {
+	repo sqlite.LikesRepository
+}
+
+// ルート関連のユースケースを扱う
+type RoutesService interface {
+	CreateRoute(route *domain.Route) error
+	GetRouteByID(id uuid.UUID) (*domain.Route, error)
+	// SearchRoutes(criteria *domain.SearchCriteria) ([]*domain.Route, int, error)
+}
+
+type routesService struct {
+	repo sqlite.RoutesRepository
+}
+
+// タグ関連のユースケースを扱う
 type TagsService interface {
 	GetTags() ([]string, error)
 }
 
 type tagsService struct {
-	repo repository.TagsRepository
+	repo sqlite.TagsRepository
 }
 
-// NewRouteService は新たな RouteService を生成します。
-func NewRouteService(repo repository.TagsRepository) TagsService {
-	return &tagsService{repo: repo}
+// ユーザー関連のユースケースを扱う
+type UsersService interface {
+	Register(userName, password string) (*domain.User, error)
+	Login(userName, password string) (*domain.User, error)
+	GetUserProfile(userID uuid.UUID) (*domain.User, error)
 }
 
-// GetTags はリポジトリから全てのタグを取得します。
-func (s *tagsService) GetTags() ([]string, error) {
-	return s.repo.GetTags()
+type usersService struct {
+	repo sqlite.UsersRepository
 }
