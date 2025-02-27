@@ -16,9 +16,15 @@ type TagsRepository interface {
 }
 
 // ルートに関する操作を抽象化したインターフェース
-type RouteRepository interface {
+type RoutesRepository interface {
 	CreateRoute(route *domain.Route) error
 	GetRouteByID(id uuid.UUID) (*domain.Route, error)
+}
+
+// チェックポイントに関する操作を抽象化したインターフェース
+type CheckpointsRepository interface {
+	CreateCheckpoints(routeID uuid.UUID, checkpoints []domain.Checkpoint) error
+	GetCheckpointsByRouteID(routeID uuid.UUID) ([]domain.Checkpoint, error)
 }
 
 // sqlx.DB を利用したリポジトリ実装
