@@ -16,16 +16,24 @@ func main() {
 	db := configDB()
 	defer db.Close()
 
-	// リポジトリ、サービス、ハンドラーの初期化
+	// リポジトリの初期化
 	repo := sqlite.NewSQLiteRepository(db)
-	service := service.NewRouteService(repo)
-	h := handler.NewHandler(service)
+
+	// サービスの初期化
+	cs := service.NewCheckpointsService(repo)
+	ls := service.NewLikesService(repo)
+	rs := service.NewRoutesService(repo)
+	ts := service.NewTagsService(repo)
+	us := service.NewUserService(repo)
+
+	// ハンドラーの初期化
+	h := handler.NewHandler(cs, ls, rs, ts, us)
 
 	// Gin ルーターの作成
-	router := gin.Default()
+	r := gin.Default()
 
 	// CORS ミドルウェアの設定
-	router.Use(cors.New(cors.Config{
+	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost", "https://sushigon-dev.github.io"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
@@ -34,10 +42,10 @@ func main() {
 	}))
 
 	// ルートの登録
-	h.RegisterRoutes(router)
+	h.RegisterRoutes(r)
 
 	// サーバー起動
-	if err := router.Run(":8080"); err != nil {
+	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("サーバー起動に失敗しました: %v", err)
 	}
 }
