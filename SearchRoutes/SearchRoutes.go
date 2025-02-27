@@ -2,41 +2,155 @@ package SearchRoutes
 
 import (
 	"database/sql"
+	"log"
+	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type sort struct {
-	KEY   string `json: "KEY"`
-	ORDER string `json: "ORDER"`
+type SearchRequest struct {
+	Distance struct {
+		Min float64 `json:"min"`
+		Max float64 `json:"max"`
+	} `json:"distance"`
+
+	Time struct {
+		Min int `json:"min"`
+		Max int `json:"max"`
+	} `json:"time"`
+
+	Tags         []string `json:"tags"`
+	SearchOption string   `json:"search_option"`
+	Sort         struct {
+		Key   string `json:"key"`
+		Order string `json:"order"`
+	} `json:"sort"`
+	Limit int `json:"limit"`
 }
 
-type request struct {
-	DISTANCE      float64  `json: "DISTANCE"`
-	TIME          int64    `json: "TIME"`
-	TAGS          []string `json: "TAGS"`
-	SEARCH_OPTION []string `json: "SEARCH_OPTION"`
-	SORT          sort     `json: "SORT"`
-	LIMIT         int64    `json: "LIMIT"`
+// ルート情報のレスポンス用構造体
+type Route struct {
+	ID          string   `json:"id"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	Distance    float64  `json:"distance"`
+	Time        int      `json:"time"`
+	Tags        []string `json:"tags"`
+	Likes       int      `json:"likes"`
+	Image       string   `json:"image"`
+	UpdateAt    string   `json:"update_at"`
 }
 
-type response struct {
-	ID          int64    `json: "ID"`
-	TITLE       string   `json: "TITLE"`
-	DESCRIPTION string   `json: "DESCRIPTION"`
-	DISTANCE    float64  `json: "DISTANCE"`
-	TIME        int64    `json: "TIME"`
-	TAGS        []string `json: "TAGS"`
-	LIKES       int64    `json: "LIKES"`
-	IMAGE       string   `json: "IMAGE"`
-	UPDATE_AT   string   `json: "UPDATE_AT"`
+// レスポンスの構造体
+type SearchResponse struct {
+	HitCount int           `json:"hit_count"`
+	Routes   []Route       `json:"routes"`
+	Request  SearchRequest `json:"request"`
 }
 
-type TagHandler struct {
+type SearchHandler struct {
 	DB *sql.DB
 }
 
 func (h *SearchHandler) SearchRoutes(c *gin.Context) {
+	// リクエストデータをバインド
+	var req SearchRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
 
+	// SQL クエリの作成
+	query := `SELECT ID, TITLE, DESCRIPTION, DISTANCE, TIME, TAGS, LIKES, IMAGE, UPDATE_AT FROM SearchRoutes WHERE 1=1`
+	args := []interface{}{}
+
+	// 距離のフィルタ
+	if req.Distance.Min >= 0 {
+		query += " AND distance >= ?"
+		args = append(args, req.Distance.Min)
+	}
+	if req.Distance.Max >= 0 {
+		query += " AND distance <= ?"
+		args = append(args, req.Distance.Max)
+	}
+
+	// 時間のフィルタ
+	if req.Time.Min >= 0 {
+		query += " AND time >= ?"
+		args = append(args, req.Time.Min)
+	}
+	if req.Time.Max >= 0 {
+		query += " AND time <= ?"
+		args = append(args, req.Time.Max)
+	}
+
+	// タグ検索の処理
+	if len(req.Tags) > 0 {
+		tagConditions := []string{}
+		for _, tag := range req.Tags {
+			tagConditions = append(tagConditions, "tags LIKE ?")
+			args = append(args, "%"+tag+"%")
+		}
+
+		switch req.SearchOption {
+		case "AND":
+			query += " AND (" + strings.Join(tagConditions, " AND ") + ")"
+		case "NOT":
+			query += " AND NOT (" + strings.Join(tagConditions, " OR ") + ")"
+		default: // "OR"
+			query += " AND (" + strings.Join(tagConditions, " OR ") + ")"
+		}
+	}
+
+	// ソート条件
+	sortKey := "likes"
+	if req.Sort.Key == "distance" || req.Sort.Key == "time" || req.Sort.Key == "update_at" {
+		sortKey = req.Sort.Key
+	}
+	sortOrder := "ASC"
+	if req.Sort.Order == "desc" {
+		sortOrder = "DESC"
+	}
+	query += " ORDER BY " + sortKey + " " + sortOrder
+
+	// 取得制限
+	limit := 12
+	if req.Limit >= 1 && req.Limit <= 60 {
+		limit = req.Limit
+	}
+	query += " LIMIT ?"
+	args = append(args, limit)
+
+	// クエリ実行
+	rows, err := h.DB.Query(query, args...)
+	if err != nil {
+		log.Println("Query Error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database query failed"})
+		return
+	}
+	defer rows.Close()
+
+	// 結果を格納
+	var routes []Route
+	for rows.Next() {
+		var route Route
+		var tags string
+		if err := rows.Scan(&route.ID, &route.Title, &route.Description, &route.Distance, &route.Time, &tags, &route.Likes, &route.Image, &route.UpdateAt); err != nil {
+			log.Println("Scan Error:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Data scan error"})
+			return
+		}
+		route.Tags = strings.Split(tags, ",") // タグを配列に変換
+		routes = append(routes, route)
+	}
+
+	// レスポンスを返す
+	response := SearchResponse{
+		HitCount: len(routes),
+		Routes:   routes,
+		Request:  req,
+	}
+	c.IndentedJSON(http.StatusOK, response)
 }

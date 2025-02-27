@@ -8,6 +8,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sushigon-dev/sagaicle-backend/GetRoute"
 	"github.com/sushigon-dev/sagaicle-backend/GetTags"
+	"github.com/sushigon-dev/sagaicle-backend/SearchRoutes"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 
 	tagHandler := &GetTags.TagHandler{DB: db}
 	routeHandler := &GetRoute.RouteHandler{DB: db}
-	searchHandler := &SearchRoute.SearchHandler{DB: db}
+	searchHandler := &SearchRoutes.SearchHandler{DB: db}
 
 	router := gin.Default()
 	router.GET("/api/tags", tagHandler.GetTags)
