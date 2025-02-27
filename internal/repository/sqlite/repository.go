@@ -32,6 +32,7 @@ type UsersRepository interface {
 	CreateUser(user *domain.User) error
 	GetUserByID(id uuid.UUID) (*domain.User, error)
 	GetUserByUsername(username string) (*domain.User, error)
+	AddBadgedRoute(userID uuid.UUID, route domain.BadgedRoute) error
 }
 
 // sqlx.DB を利用したリポジトリ実装
