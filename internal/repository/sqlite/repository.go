@@ -36,6 +36,13 @@ type UsersRepository interface {
 	AddBadgedRoute(userID uuid.UUID, route domain.BadgedRoute) error
 }
 
+// いいねに関する操作を抽象化したインターフェース
+type LikesRepository interface {
+	LikeRoute(userID, routeID uuid.UUID) error
+	DislikeRoute(userID, routeID uuid.UUID) error
+	IsLiked(userID, routeID uuid.UUID) (bool, int, error)
+}
+
 // sqlx.DB を利用したリポジトリ実装
 type SQLiteRepository struct {
 	db *sqlx.DB
