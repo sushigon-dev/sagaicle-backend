@@ -16,16 +16,16 @@ type TagsService interface {
 	GetTags() ([]string, error)
 }
 
-type routeService struct {
+type tagsService struct {
 	repo repository.TagsRepository
 }
 
 // NewRouteService は新たな RouteService を生成します。
 func NewRouteService(repo repository.TagsRepository) TagsService {
-	return &routeService{repo: repo}
+	return &tagsService{repo: repo}
 }
 
 // GetTags はリポジトリから全てのタグを取得します。
-func (s *routeService) GetTags() ([]string, error) {
+func (s *tagsService) GetTags() ([]string, error) {
 	return s.repo.GetTags()
 }
