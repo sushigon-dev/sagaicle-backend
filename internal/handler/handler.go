@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"net/http"
 	// "strconv"
 	// "time"
 
@@ -11,33 +10,20 @@ import (
 	"github.com/sushigon-dev/sagaicle/internal/service"
 )
 
-// Handler はサービス層を利用するハンドラー層のエントリーポイントです。
+// サービス層を利用するハンドラー層のエントリーポイント
 type Handler struct {
-	routeService service.TagsService
+	tagsService service.TagsService
 }
 
-// NewHandler は新たなハンドラーを生成します。
-func NewHandler(routeService service.TagsService) *Handler {
+// 新たなハンドラーを生成
+func NewHandler(tagsService service.TagsService) *Handler {
 	return &Handler{
-		routeService: routeService,
+		tagsService: tagsService,
 	}
 }
 
-// RegisterRoutes は各エンドポイントをルーターに登録します。
+// 各エンドポイントをルーターに登録
 func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	// タグ
 	router.GET("/api/tags", h.GetTags)
-}
-
-// GetTags は全てのタグを取得して返します。
-func (h *Handler) GetTags(c *gin.Context) {
-	tags, err := h.routeService.GetTags()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"tags":  tags,
-		"error": "",
-	})
 }
