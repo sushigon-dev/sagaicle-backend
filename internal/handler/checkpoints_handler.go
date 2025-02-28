@@ -31,7 +31,7 @@ func (h *Handler) GetVisitedCheckpoints(c *gin.Context) {
 					// サービス層に実装があると仮定
 					visited, err := h.checkpointsService.VisitCheckpoint(userID, routeID)
 					if err != nil {
-		                logger.LogError(err, "チェックポイントのサービス層で死んだ")
+		                logger.LogError(err, "チェックポイント訪問記録の取得に失敗")
 						c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 						return
 					}
@@ -69,7 +69,7 @@ func (h *Handler) VisitCheckpoint(c *gin.Context) {
 	if err := h.checkpointsService.VisitCheckpoint(
 		userID, routeID, cpIndex,
 	); err != nil {
-		logger.LogError(err, "チェックポイントのサービス層で死んだ")
+		logger.LogError(err, "チェックポイント訪問記録の追加に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

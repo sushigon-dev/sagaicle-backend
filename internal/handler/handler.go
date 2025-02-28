@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sushigon-dev/sagaicle/internal/service"
-	"github.com/sushigon-dev/sagaicle/utils/logger"
 )
 
 // サービス層を利用するハンドラー層のエントリーポイント
