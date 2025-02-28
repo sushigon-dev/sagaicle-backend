@@ -127,3 +127,17 @@ CREATE TABLE IF NOT EXISTS visited_checkpoints (
     FOREIGN KEY (route_id, checkpoint_index) REFERENCES checkpoints(route_id, checkpoint_index) ON DELETE CASCADE
 );
 
+-- タグマスタテーブルに初期値を挿入
+INSERT INTO tags (tag) VALUES
+('歴史探索'),
+('温泉巡り'),
+('家族向け'),
+('グルメ体験'),
+('市街地探索'),
+('アマチュア向け'),
+('絶景ルート'),
+('海沿い'),
+('アドベンチャー'),
+('ヒルクライム'),
+('リラクゼーション'),
+('ファミリー向け');
