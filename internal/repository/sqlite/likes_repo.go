@@ -3,7 +3,6 @@ package sqlite
 import (
 	"github.com/google/uuid"
 	"github.com/sushigon-dev/sagaicle/utils/logger"
-    	"github.com/sushigon-dev/sagaicle/utils/errors"
 )
 
 // ユーザーがルートに「いいね」した記録を追加、ルートの likes カウントを更新
