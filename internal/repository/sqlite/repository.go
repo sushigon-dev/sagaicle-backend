@@ -1,0 +1,50 @@
+package sqlite
+
+import (
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+	"github.com/sushigon-dev/sagaicle/internal/domain"
+)
+
+// タグに関する操作を抽象化したインターフェース
+type TagsRepository interface {
+	GetTags() ([]string, error)
+}
+
+// ルートに関する操作を抽象化したインターフェース
+type RoutesRepository interface {
+	CreateRoute(route *domain.Route) error
+	GetRouteByID(id uuid.UUID) (*domain.Route, error)
+}
+
+// チェックポイントに関する操作を抽象化したインターフェース
+type CheckpointsRepository interface {
+	CreateCheckpoints(routeID uuid.UUID, checkpoints []domain.Checkpoint) error
+	GetCheckpointsByRouteID(routeID uuid.UUID) ([]domain.Checkpoint, error)
+	VisitCheckpoint(userID, routeID uuid.UUID, checkpointIndex int) error
+}
+
+// ユーザーに関する操作を抽象化したインターフェース
+type UsersRepository interface {
+	CreateUser(user *domain.User) error
+	GetUserByID(id uuid.UUID) (*domain.User, error)
+	GetUserByUsername(username string) (*domain.User, error)
+	AddBadgedRoute(userID uuid.UUID, route domain.BadgedRoute) error
+}
+
+// いいねに関する操作を抽象化したインターフェース
+type LikesRepository interface {
+	LikeRoute(userID, routeID uuid.UUID) error
+	DislikeRoute(userID, routeID uuid.UUID) error
+	IsLiked(userID, routeID uuid.UUID) (bool, int, error)
+}
+
+// sqlx.DB を利用したリポジトリ実装
+type SQLiteRepository struct {
+	db *sqlx.DB
+}
+
+// 新たなリポジトリインスタンスを生成
+func NewSQLiteRepository(db *sqlx.DB) *SQLiteRepository {
+	return &SQLiteRepository{db: db}
+}
