@@ -15,6 +15,7 @@ type TagsRepository interface {
 type RoutesRepository interface {
 	CreateRoute(route *domain.Route) error
 	GetRouteByID(id uuid.UUID) (*domain.Route, error)
+	SearchRoutes(criteria *domain.SearchCriteria) ([]domain.RouteSummary, int, error)
 }
 
 // チェックポイントに関する操作を抽象化したインターフェース

@@ -3,10 +3,12 @@ package sqlite
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/sushigon-dev/sagaicle/internal/domain"
+	"github.com/sushigon-dev/sagaicle/utils"
 	"github.com/sushigon-dev/sagaicle/utils/logger"
 )
 
@@ -36,7 +38,7 @@ func (r *SQLiteRepository) CreateRoute(route *domain.Route) error {
 		updateAt, route.TotalCheckpoints, route.Map,
 	)
 	if err != nil {
-		logger.LogError(err, "ルートの登録に失敗"+fmt.Sprint(query,
+		logger.Error(err, "ルートの登録に失敗"+fmt.Sprint(query,
 			route.ID.String(), route.Title, route.Description, route.FullDescription,
 			route.Distance, route.Time, route.Likes, image, updateAt,
 			route.TotalCheckpoints, route.Map),
@@ -48,14 +50,14 @@ func (r *SQLiteRepository) CreateRoute(route *domain.Route) error {
 		// タグマスターへの登録：tags テーブルにタグを追加（既に存在する場合は無視）
 		tagInsertQuery := `INSERT OR IGNORE INTO tags (tag) VALUES (?);`
 		if _, err := r.db.Exec(tagInsertQuery, tag); err != nil {
-			logger.LogError(err, "タグマスターへの登録に失敗: "+tag)
+			logger.Error(err, "タグマスターへの登録に失敗: "+tag)
 			return err
 		}
 
 		// ルートとタグの紐付け：Route_Tagsテーブルに対して、ルートIDとタグ名を登録
 		routeTagQuery := `INSERT INTO route_tags (route_id, tag_name) VALUES (?, ?);`
 		if _, err = r.db.Exec(routeTagQuery, route.ID.String(), tag); err != nil {
-			logger.LogError(err, "ルートタグの登録に失敗: "+
+			logger.Error(err, "ルートタグの登録に失敗: "+
 				fmt.Sprint(routeTagQuery, route.ID.String(), tag))
 			return err
 		}
@@ -65,7 +67,7 @@ func (r *SQLiteRepository) CreateRoute(route *domain.Route) error {
 	for _, imageURI := range route.Images {
 		imageQuery := `INSERT INTO route_images (route_id, image) VALUES (?, ?);`
 		if _, err = r.db.Exec(imageQuery, route.ID.String(), imageURI); err != nil {
-			logger.LogError(err, "画像の登録に失敗: "+imageURI)
+			logger.Error(err, "画像の登録に失敗: "+imageURI)
 			return err
 		}
 	}
@@ -98,27 +100,27 @@ func (r *SQLiteRepository) GetRouteByID(id uuid.UUID) (*domain.Route, error) {
 	}
 
 	if err := r.db.Get(&row, query, id.String()); err != nil {
-		logger.LogError(err, "ルートの取得に失敗"+fmt.Sprint(query, id.String()))
+		logger.Error(err, "ルートの取得に失敗"+fmt.Sprint(query, id.String()))
 		return nil, err
 	}
 
 	// JSON フィールドのデコード
 	var tags []string
 	if err := json.Unmarshal([]byte(row.Tags), &tags); err != nil {
-		logger.LogError(err, "JSONのデコードに失敗")
+		logger.Error(err, "JSONのデコードに失敗")
 		return nil, err
 	}
 
 	var images []string
 	if err := json.Unmarshal([]byte(row.Images), &images); err != nil {
-		logger.LogError(err, "JSONのデコードに失敗")
+		logger.Error(err, "JSONのデコードに失敗")
 		return nil, err
 	}
 
 	// 日付のパース
 	updatedAt, err := time.Parse("2006/01/02", row.UpdateAt)
 	if err != nil {
-		logger.LogError(err, "日付のパースに失敗")
+		logger.Error(err, "日付のパースに失敗")
 		return nil, err
 	}
 
@@ -140,10 +142,158 @@ func (r *SQLiteRepository) GetRouteByID(id uuid.UUID) (*domain.Route, error) {
 	// チェックポイントの取得
 	checkpoints, err := r.GetCheckpointsByRouteID(id)
 	if err != nil {
-		logger.LogError(err, "チェックポイントの取得に失敗")
+		logger.Error(err, "チェックポイントの取得に失敗")
 		return nil, err
 	}
 	route.Checkpoints = checkpoints
 
 	return route, nil
+}
+
+// 検索条件に基づいてルート一覧とヒット件数を返す（検索する）
+// リクエストはポインタで受け取ることで返り値を略
+func (r *SQLiteRepository) SearchRoutes(criteria *domain.SearchCriteria) ([]domain.RouteSummary, int, error) {
+	var whereClauses []string
+	var args []interface{}
+
+	// 距離条件: 条件として指定しない場合は -1.0 を用いる（初期値）
+	if criteria.Distance.Min != -1.0 {
+		whereClauses = append(whereClauses, "distance >= ?")
+		args = append(args, criteria.Distance.Min)
+	}
+	if criteria.Distance.Max != -1.0 {
+		whereClauses = append(whereClauses, "distance <= ?")
+		args = append(args, criteria.Distance.Max)
+	}
+
+	// 所要時間条件: 条件として指定しない場合は -1 を用いる（初期値）
+	if criteria.Time.Min != -1 {
+		whereClauses = append(whereClauses, "time >= ?")
+		args = append(args, criteria.Time.Min)
+	}
+	if criteria.Time.Max != -1 {
+		whereClauses = append(whereClauses, "time <= ?")
+		args = append(args, criteria.Time.Max)
+	}
+
+	// タグ条件: tags が空の場合は条件に含めない
+	if len(criteria.Tags) > 0 {
+		// search_option の初期値は "OR" とする（配列の先頭を利用）
+		searchOption := "OR"
+		if len(criteria.SearchOption) > 0 {
+			searchOption = criteria.SearchOption[0]
+		}
+
+		var tagConditions []string
+		for _, tag := range criteria.Tags {
+			if searchOption == "NOT" {
+				tagConditions = append(tagConditions, "tags NOT LIKE ?")
+			} else {
+				tagConditions = append(tagConditions, "tags LIKE ?")
+			}
+			// JSON 配列として保存しているため、"%\"<tag>\"%" のパターンで検索
+			args = append(args, "%\""+tag+"\"%")
+		}
+
+		// "AND" または "NOT" の場合は各条件を全て満たす必要があるので AND で結合、
+		// "OR" の場合はどれか1つでもマッチすればよいので OR で結合
+		op := " OR "
+		if searchOption == "AND" || searchOption == "NOT" {
+			op = " AND "
+		}
+		tagClause := "(" + utils.JoinConditions(tagConditions, op) + ")"
+		whereClauses = append(whereClauses, tagClause)
+	}
+
+	// WHERE 句の組み立て: 条件がない場合は常に真となる "1=1" を利用
+	whereSQL := "1=1"
+	if len(whereClauses) > 0 {
+		whereSQL = strings.Join(whereClauses, " AND ")
+	}
+
+	// ヒット件数を取得するクエリ
+	countQuery := "SELECT COUNT(*) FROM routes WHERE " + whereSQL
+	var hitCount int
+	if err := r.db.Get(&hitCount, countQuery, args...); err != nil {
+		logger.Error(err, "ヒット件数の取得に失敗"+fmt.Sprint(countQuery, args))
+		return nil, 0, err
+	}
+
+	// メインクエリの組み立て: 取得するカラムは RouteSummary に必要なもののみ
+	mainQuery := "SELECT id, title, description, distance, time, tags, likes, image, update_at FROM routes WHERE " + whereSQL
+
+	// ソート
+	sortKey := criteria.Sort.Key
+	sortOrder := criteria.Sort.Order
+
+	// バリデーションのような処理
+	// 許容するソートキー: "distance", "time", "likes", "update_at"
+	switch sortKey {
+	case "distance", "time", "likes", "update_at":
+		// OK
+	default:
+		sortKey = "likes"
+	}
+	if sortOrder != "asc" && sortOrder != "desc" {
+		sortOrder = "asc"
+	}
+	mainQuery += " ORDER BY " + sortKey + " " + sortOrder
+
+	// 件数制限
+	if criteria.Limit < 1 {
+		criteria.Limit = 12
+	} else if criteria.Limit > 60 {
+		criteria.Limit = 60
+	}
+	mainQuery += " LIMIT ?"
+	args = append(args, criteria.Limit)
+
+	// クエリ実行: 中間構造体を利用して結果を一時受け取り
+	var rows []struct {
+		ID          string  `db:"id"`
+		Title       string  `db:"title"`
+		Description string  `db:"description"`
+		Distance    float64 `db:"distance"`
+		Time        int     `db:"time"`
+		Tags        string  `db:"tags"` // JSON 文字列として保存されている
+		Likes       int     `db:"likes"`
+		Image       string  `db:"image"`
+		UpdateAt    string  `db:"update_at"`
+	}
+	if err := r.db.Select(&rows, mainQuery, args...); err != nil {
+		return nil, 0, err
+	}
+
+	// 結果のマッピング
+	var summaries []domain.RouteSummary
+	for _, row := range rows {
+		var tags []string
+		// JSON 文字列を配列に変換
+		if err := json.Unmarshal([]byte(row.Tags), &tags); err != nil {
+			logger.Warnning(fmt.Sprint(err), "JSONのデコードに失敗")
+			tags = []string{}
+		}
+		// JSON 文字列をTime型に変換
+		updatedAt, err := time.Parse("2006/01/02", row.UpdateAt)
+		if err != nil {
+			logger.Error(err, "日付のパースに失敗")
+			return nil, 0, err
+		}
+
+		// ルートサマリーの作成
+		summary := domain.RouteSummary{
+			ID:          uuid.MustParse(row.ID),
+			Title:       row.Title,
+			Description: row.Description,
+			Distance:    row.Distance,
+			Time:        row.Time,
+			Tags:        tags,
+			Likes:       row.Likes,
+			Image:       row.Image,
+			UpdateAt:    updatedAt,
+		}
+		summaries = append(summaries, summary)
+	}
+
+	return summaries, hitCount, nil
 }
