@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sushigon-dev/sagaicle/internal/domain"
+	"github.com/sushigon-dev/sagaicle/utils/logger"
 )
 
 // ルートの作成と、それに紐づくチェックポイントの登録
@@ -13,10 +14,12 @@ func (r *SQLiteRepository) CreateRoute(route *domain.Route) error {
 	// 配列フィールドは JSON エンコードして保存
 	tagsJSON, err := json.Marshal(route.Tags)
 	if err != nil {
+		logger.LogError(err, "tags の JSON エンコードに失敗")
 		return err
 	}
 	imagesJSON, err := json.Marshal(route.Images)
 	if err != nil {
+		logger.LogError(err, "images の JSON エンコードに失敗")
 		return err
 	}
 	// update_at は "YYYY/MM/DD" 形式に変換
@@ -40,6 +43,7 @@ func (r *SQLiteRepository) CreateRoute(route *domain.Route) error {
 		updateAt, route.TotalCheckpoints, string(imagesJSON), route.Map,
 	)
 	if err != nil {
+		logger.LogError(err, "ルートの登録に失敗")
 		return err
 	}
 
@@ -70,20 +74,24 @@ func (r *SQLiteRepository) GetRouteByID(id uuid.UUID) (*domain.Route, error) {
 		Map              string  `db:"map"`
 	}
 	if err := r.db.Get(&row, query, id.String()); err != nil {
+		logger.LogError(err, "ルートの取得に失敗")
 		return nil, err
 	}
 	// JSON フィールドのデコード
 	var tags []string
 	if err := json.Unmarshal([]byte(row.Tags), &tags); err != nil {
+		logger.LogError(err, "JSONのデコードに失敗")
 		return nil, err
 	}
 	var images []string
 	if err := json.Unmarshal([]byte(row.Images), &images); err != nil {
+		logger.LogError(err, "JSONのデコードに失敗")
 		return nil, err
 	}
 	// 日付のパース
 	updatedAt, err := time.Parse("2006/01/02", row.UpdateAt)
 	if err != nil {
+		logger.LogError(err, "日付のパースに失敗")
 		return nil, err
 	}
 	route := &domain.Route{
@@ -103,6 +111,7 @@ func (r *SQLiteRepository) GetRouteByID(id uuid.UUID) (*domain.Route, error) {
 	// チェックポイントの取得
 	checkpoints, err := r.GetCheckpointsByRouteID(id)
 	if err != nil {
+		logger.LogError(err, "チェックポイントの取得に失敗")
 		return nil, err
 	}
 	route.Checkpoints = checkpoints
