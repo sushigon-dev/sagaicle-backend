@@ -2,7 +2,10 @@ package PostRoute
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -10,24 +13,21 @@ import (
 
 // ルートデータの構造体
 type Route struct {
-	ID               string       `json:"id"`
-	Title            string       `json:"title"`
-	Description      string       `json:"description"`
-	FullDescription  string       `json:"full_description"`
-	Distance         float64      `json:"distance"`
-	Time             int64        `json:"time"`
-	Tags             []string     `json:"tags"`
-	TotalCheckpoints int          `json:"total_checkpoints"`
-	Images           []string     `json:"images"`
-	Map              string       `json:"map"`
-	Checkpoints      []Checkpoint `json:"checkpoints"`
-}
-
-// チェックポイントの構造体
-type Checkpoint struct {
-	Name string  `json:"name"`
-	Lat  float64 `json:"lat"`
-	Lng  float64 `json:"lng"`
+	ID               string     `json:"id"`
+	Title            string     `json:"title"`
+	Description      string     `json:"description"`
+	FullDescription  string     `json:"full_description"`
+	Distance         float64    `json:"distance"`
+	Time             int64      `json:"time"`
+	Tags             []string   `json:"tags"`
+	TotalCheckpoints int        `json:"total_checkpoints"`
+	Images           []string   `json:"images"`
+	Map              string     `json:"map"`
+	Checkpoints      []struct { // ✅ 配列（スライス）に変更
+		Name string  `json:"name"`
+		Lat  float64 `json:"lat"`
+		Ing  float64 `json:"lng"`
+	} `json:"checkpoints"`
 }
 
 type PostHandler struct {
@@ -59,32 +59,79 @@ func (h *PostHandler) PostRoute(c *gin.Context) {
 	}
 
 	// タグをデータベースに保存
-	for _, tag := range route.Tags {
-		_, err := h.DB.Exec(`INSERT INTO routes (ROUTE_ID, TAG) VALUES (?, ?)`, route.ID, tag)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert tags"})
-			return
-		}
+	//　ただしGetRouteなどからアクセスしようとすると
+	// 保存されていない、と出る。
+	tagsString := strings.Join(route.Tags, ",")
+	_, err = h.DB.Exec(`INSERT INTO routes (ROUTE_ID, TAGS) VALUES (?, ?)`, route.ID, tagsString)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert tags"})
+		return
 	}
 
 	// 画像URLをデータベースに保存
-	for _, img := range route.Images {
-		_, err := h.DB.Exec(`INSERT INTO routes (ROUTE_ID, IMAGE_URL) VALUES (?, ?)`, route.ID, img)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert images"})
-			return
-		}
+	imgString := strings.Join(route.Images, ",")
+	_, err = h.DB.Exec(`INSERT INTO routes (IMAGES) VALUES (?) WHERE id = ?`, imgString, route.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert tags"})
+		return
+	}
+
+	//時刻をデータベースに保存
+	now := time.Now()
+	_, err = h.DB.Exec(`INSERT INTO routes (UPDATE_AT) VALUES (?) WHERE id = ?`, now, route.ID)
+	fmt.Println(now)
+	if err != nil {
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert tags" + err.Error()})
+		return
 	}
 
 	// チェックポイントをデータベースに保存
 	for _, cp := range route.Checkpoints {
-		_, err := h.DB.Exec(`INSERT INTO routes (ROUTE_ID, NAME, LAT, LNG) VALUES (?, ?, ?, ?)`, route.ID, cp.Name, cp.Lat, cp.Lng)
+		_, err := h.DB.Exec(
+			`INSERT INTO routes (ROUTE_ID, NAME, LAT, ING) VALUES (?, ?, ?, ?)`,
+			route.ID, cp.Name, cp.Lat, cp.Ing,
+		)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert checkpoints"})
 			return
 		}
 	}
 
+	/*
+		_, err = h.DB.Exec(`INSERT INTO routes (ROUTE_ID, NAME, LAT, ING) VALUES (?, ?, ?, ?)`, route.ID, route.Checkpoints.Name, route.Checkpoints.Lat, route.Checkpoints.Ing)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert checkpoints"})
+			return
+		}
+	*/
+
 	// 受け取ったデータをそのままレスポンスとして返す
 	c.JSON(http.StatusOK, route)
 }
+
+//リクエスト例
+/*
+curl -X POST "http://localhost:8080/api/routes" \
+-H "Authorization: Bearer <YOUR_TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{
+  "title": "サンプルルート",
+  "description": "楽しいサイクリングコース",
+  "full_description": "このルートは海岸沿いを走る爽快なサイクリングコースです。",
+  "distance": 12.5,
+  "time": 90,
+  "tags": ["海", "山", "初心者向け"],
+  "total_checkpoints": 3,
+  "images": [
+	"https://github.com/sushigon-dev/sagaicle-docs/images/0e746155-f52e-4502-83f8-ab91e47abf6f.png",
+	"https://x162-43-27-150.static.xvps.ne.jp/images/1a2b3c4d-5678-90ab-cdef-1234567890ab.jpg"
+  ],
+  "map": "https://www.google.com/maps/embed?pb=!1m34!1m12!1m3...",
+  "checkpoints": [
+	{ "name": "スタート地点", "lat": 33.5007, "lng": 129.8789 },
+	{ "name": "絶景ポイント", "lat": 33.5370, "lng": 129.8950 },
+	{ "name": "ゴール地点", "lat": 33.5555, "lng": 129.8463 }
+  ]
+}'
+*/

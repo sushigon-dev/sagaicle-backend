@@ -28,6 +28,7 @@ func main() {
 
 	router := gin.Default()
 	router.GET("/api/tags", tagHandler.GetTags)
+	//GetRoute uuidだとうまくいかん
 	router.GET("/api/route/:id", routeHandler.GetRoute)
 	router.POST("/api/search", searchHandler.SearchRoutes)
 	router.POST("/api/routes", postHandler.PostRoute)
