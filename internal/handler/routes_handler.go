@@ -117,6 +117,11 @@ func (h *Handler) SearchRoutes(c *gin.Context) {
 		return
 	}
 
+	error := ""
+	if routes == nil {
+		error = "成功したけど、条件に合致するデータはなかったよ"
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"hit_count":     hitCount,
 		"routes":        routes,
@@ -126,6 +131,6 @@ func (h *Handler) SearchRoutes(c *gin.Context) {
 		"search_option": criteria.SearchOption,
 		"sort":          criteria.Sort,
 		"limit":         criteria.Limit,
-		"error":         "",
+		"error":         error,
 	})
 }
