@@ -12,7 +12,7 @@ import (
 func (h *Handler) GetTags(c *gin.Context) {
 	tags, err := h.tagsService.GetTags()
 	if err != nil {
-		logger.LogError(err, "タグの取得に失敗")
+		logger.Error(err, "タグの取得に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.InternalServer})
 		return
 	}

@@ -16,14 +16,14 @@ func (h *Handler) Register(c *gin.Context) {
 		Password string `json:"password"`
 	}
 	if err := c.BindJSON(&req); err != nil {
-		logger.LogError(err, "JSONのバインドに失敗")
+		logger.Error(err, "JSONのバインドに失敗")
 		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InvalidFormat})
 		return
 	}
 
 	user, err := h.usersService.Register(req.UserName, req.Password)
 	if err != nil {
-		logger.LogError(err, "ユーザー登録に失敗")
+		logger.Error(err, "ユーザー登録に失敗")
 		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InternalServer})
 		return
 	}
@@ -42,14 +42,14 @@ func (h *Handler) Login(c *gin.Context) {
 		Password string `json:"password"`
 	}
 	if err := c.BindJSON(&req); err != nil {
-		logger.LogError(err, "JSONのバインドに失敗")
+		logger.Error(err, "JSONのバインドに失敗")
 		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InvalidFormat})
 		return
 	}
 
 	user, err := h.usersService.Login(req.UserName, req.Password)
 	if err != nil {
-		logger.LogError(err, "ログインに失敗")
+		logger.Error(err, "ログインに失敗")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": errors.InternalServer})
 		return
 	}
@@ -66,14 +66,14 @@ func (h *Handler) Whoami(c *gin.Context) {
 	userIDStr := c.GetHeader("X-User-ID")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		logger.LogError(err, "ユーザーIDのパースに失敗")
+		logger.Error(err, "ユーザーIDのパースに失敗")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": errors.InvalidFormat})
 		return
 	}
 
 	user, err := h.usersService.GetUserProfile(userID)
 	if err != nil {
-		logger.LogError(err, "ユーザー情報の取得に失敗")
+		logger.Error(err, "ユーザー情報の取得に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.InternalServer})
 		return
 	}
