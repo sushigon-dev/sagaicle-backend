@@ -32,6 +32,10 @@ func main() {
 	// Gin ルーターの作成
 	r := gin.Default()
 
+	// 標準のロガーとリカバリミドルウェアを設定
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
+
 	// CORS ミドルウェアの設定
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost", "https://sushigon-dev.github.io"},
