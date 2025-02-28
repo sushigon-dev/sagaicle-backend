@@ -30,7 +30,7 @@ type likesService struct {
 type RoutesService interface {
 	CreateRoute(route *domain.Route) error
 	GetRouteByID(id uuid.UUID) (*domain.Route, error)
-	SearchRoutes(criteria *domain.SearchCriteria) ([]*domain.Route, int, error)
+	SearchRoutes(criteria *domain.SearchCriteria) ([]domain.RouteSummary, int, error)
 }
 
 type routesService struct {

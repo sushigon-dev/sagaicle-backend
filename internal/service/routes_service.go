@@ -112,6 +112,6 @@ func (s *routesService) GetRouteByID(id uuid.UUID) (*domain.Route, error) {
 
 // 検索条件に基づいてルート一覧を取得
 // （検索の動的な組み立ては、リポジトリ層側で実装）
-func (s *routesService) SearchRoutes(criteria *domain.SearchCriteria) ([]*domain.Route, int, error) {
+func (s *routesService) SearchRoutes(criteria *domain.SearchCriteria) ([]domain.RouteSummary, int, error) {
 	return s.repo.SearchRoutes(criteria)
 }
