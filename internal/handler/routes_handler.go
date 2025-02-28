@@ -80,7 +80,7 @@ func (h *Handler) GetRouteByID(c *gin.Context) {
 	route, err := h.routesService.GetRouteByID(routeID)
 	if err != nil {
 		logger.Error(err, "route_idからルートの取得に失敗")
-		c.JSON(http.StatusNotFound, gin.H{"error": errors.InternalServer})
+		c.JSON(http.StatusNotFound, gin.H{"error": errors.Resource})
 		return
 	}
 
