@@ -16,7 +16,7 @@ module.exports = {
   ],
   maxMessageLength: 64,
   minMessageLength: 1,
-  questions: ["type", "scope", "subject", "issues"],
+  questions: ["type", "subject", "issues", "body"],
   scopes: [],
   types: {
     cicd: {
@@ -78,8 +78,9 @@ module.exports = {
     },
   },
   messages: {
-    type: "どんなコミットですか？:",
-    subject: "変更点簡潔に！！:\n",
-    issues: "閉じる issue いくつ～？\n",
+    type: "どんなコミット？",
+    subject: "ひとことで変更点は？\n",
+    issues: "閉じる issue いくつ？\n",
+    body: "詳細あれば～\n",
   },
 };
