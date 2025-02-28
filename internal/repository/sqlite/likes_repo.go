@@ -21,12 +21,12 @@ func (r *SQLiteRepository) LikeRoute(userID, routeID uuid.UUID) error {
 	updateQuery := `
         UPDATE routes SET likes = likes + 1 WHERE id = ?;
     `
-	_, err := r.db.Exec(updateQuery, routeID.String())
-	if err != nil {
+	if _, err := r.db.Exec(updateQuery, routeID.String()); err != nil {
 		logger.LogError(err, "いいね数の更新に失敗")
+		return err
 	}
 
-	return err
+	return nil
 }
 
 // ユーザーの「いいね」を削除し、ルートの likes カウントを更新

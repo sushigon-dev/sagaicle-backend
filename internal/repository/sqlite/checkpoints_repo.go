@@ -56,10 +56,12 @@ func (r *SQLiteRepository) VisitCheckpoint(userID, routeID uuid.UUID, checkpoint
         INSERT INTO visited_checkpoints (user_id, route_id, checkpoint_index)
         VALUES (?, ?, ?);
     `
-	_, err := r.db.Exec(query, userID.String(), routeID.String(), checkpointIndex)
-	if err != nil {
+	if _, err := r.db.Exec(
+		query, userID.String(), routeID.String(), checkpointIndex,
+	); err != nil {
 		logger.LogError(err, "チェックポイントの訪問記録の追加に失敗")
+		return err
 	}
 
-	return err
+	return nil
 }
