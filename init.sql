@@ -61,11 +61,11 @@ END;
 -- ルートに付与するタグの中間テーブル
 CREATE TABLE IF NOT EXISTS route_tags (
     route_id TEXT NOT NULL,
-    tag TEXT NOT NULL,
-    PRIMARY KEY (route_id, tag),
+    tag_name TEXT NOT NULL,
+    PRIMARY KEY (route_id, tag_name),
     FOREIGN KEY (route_id) REFERENCES routes(id) ON DELETE CASCADE,
-    FOREIGN KEY (tag) REFERENCES tags(tag) ON DELETE CASCADE,
-    CHECK (LENGTH(tag) BETWEEN 1 AND 10)
+    FOREIGN KEY (tag_name) REFERENCES tags(tag) ON DELETE CASCADE,
+    CHECK (LENGTH(tag_name) BETWEEN 1 AND 10)
 );
 
 -- ルート1件につき最大20件のタグ登録を enforce するトリガー
