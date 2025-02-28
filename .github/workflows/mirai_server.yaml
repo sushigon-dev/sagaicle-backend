@@ -30,7 +30,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          source: ["sagaicle", "init.sql"]
+          source: "sagaicle"
           target: "/home/miray/sushigon"
 
       - name: Copy init.sql to VPS
