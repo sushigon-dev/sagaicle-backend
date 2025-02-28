@@ -26,7 +26,7 @@ func (h *Handler) IsLiked(c *gin.Context) {
 	}
 	isLiked, likes, err := h.likesService.IsLiked(userID, routeID)
 	if err != nil {
-		logger.LogError(err, "いいねのサービス層で死んだ")
+		logger.LogError(err, "いいねの確認に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -55,13 +55,13 @@ func (h *Handler) LikeRoute(c *gin.Context) {
 		return
 	}
 	if err := h.likesService.LikeRoute(userID, routeID); err != nil {
-		logger.LogError(err, "いいねのサービス層で死んだ")
+		logger.LogError(err, "いいねの追加に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	_, likes, err := h.likesService.IsLiked(userID, routeID)
 	if err != nil {
-		logger.LogError(err, "いいねのサービス層で死んだ")
+		logger.LogError(err, "いいねの確認に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -89,13 +89,13 @@ func (h *Handler) DislikeRoute(c *gin.Context) {
 		return
 	}
 	if err := h.likesService.DislikeRoute(userID, routeID); err != nil {
-		logger.LogError(err, "いいねのサービス層で死んだ")
+		logger.LogError(err, "いいねの削除に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	_, likes, err := h.likesService.IsLiked(userID, routeID)
 	if err != nil {
-		logger.LogError(err, "いいねのサービス層で死んだ")
+		logger.LogError(err, "いいねの確認に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

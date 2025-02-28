@@ -21,7 +21,7 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 	user, err := h.usersService.Register(req.UserName, req.Password)
 	if err != nil {
-		logger.LogError(err, "ユーザーのサービス層で死んだ")
+		logger.LogError(err, "ユーザー登録に失敗")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -45,7 +45,7 @@ func (h *Handler) Login(c *gin.Context) {
 	}
 	user, err := h.usersService.Login(req.UserName, req.Password)
 	if err != nil {
-		logger.LogError(err, "ユーザーのサービス層で死んだ")
+		logger.LogError(err, "ログインに失敗")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
@@ -61,13 +61,13 @@ func (h *Handler) Whoami(c *gin.Context) {
 	userIDStr := c.GetHeader("X-User-ID")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		logger.LogError(err, "X-User-IDのパースに失敗")
+		logger.LogError(err, "ユーザーIDのパースに失敗")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 	user, err := h.usersService.GetUserProfile(userID)
 	if err != nil {
-		logger.LogError(err, "ユーザーのサービス層で死んだ")
+		logger.LogError(err, "ユーザー情報の取得に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

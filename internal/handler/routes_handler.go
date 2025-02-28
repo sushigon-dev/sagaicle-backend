@@ -24,7 +24,7 @@ func (h *Handler) CreateRoute(c *gin.Context) {
 		Checkpoints      []domain.Checkpoint `json:"checkpoints"`
 	}
 	if err := c.BindJSON(&req); err != nil {
-		logger.LogError(err, "JSONのバインドに失敗")
+		logger.LogError(err, "リクエストのバインドに失敗")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -44,7 +44,7 @@ func (h *Handler) CreateRoute(c *gin.Context) {
 
 	// サービス層で入力検証、UUID発行、更新日時設定などが行われる
 	if err := h.routesService.CreateRoute(route); err != nil {
-		logger.LogError(err, "ルートのサービス層で死んだ")
+		logger.LogError(err, "ルートの作成に失敗")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -101,28 +101,28 @@ func (h *Handler) GetRouteByID(c *gin.Context) {
 // 検索条件に基づいてルート一覧を取得
 func (h *Handler) SearchRoutes(c *gin.Context) {
 	/*
-			var criteria domain.SearchCriteria
-			if err := c.BindJSON(&criteria); err != nil {
-		    	logger.LogError(err, "JSONのバインドに失敗")
-				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
-			routes, hitCount, err := h. routesService.SearchRoutes(&criteria)
-			if err != nil {
-		    	logger.LogError(err, "ルートのサービス層")
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-				return
-			}
-			c.JSON(http.StatusOK, gin.H{
-				"hit_count":     hitCount,
-				"routes":        routes,
-				"distance":      criteria.Distance,
-				"time":          criteria.Time,
-				"tags":          criteria.Tags,
-				"search_option": criteria.SearchOption,
-				"sort":          criteria.Sort,
-				"limit":         criteria.Limit,
-				"error":         "",
-			})
+				var criteria domain.SearchCriteria
+				if err := c.BindJSON(&criteria); err != nil {
+	                logger.LogError(err, "リクエストのバインドに失敗")
+					c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+					return
+				}
+				routes, hitCount, err := h. routesService.SearchRoutes(&criteria)
+				if err != nil {
+	                logger.LogError(err, "ルートの検索に失敗")
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+				c.JSON(http.StatusOK, gin.H{
+					"hit_count":     hitCount,
+					"routes":        routes,
+					"distance":      criteria.Distance,
+					"time":          criteria.Time,
+					"tags":          criteria.Tags,
+					"search_option": criteria.SearchOption,
+					"sort":          criteria.Sort,
+					"limit":         criteria.Limit,
+					"error":         "",
+				})
 	*/
 }
