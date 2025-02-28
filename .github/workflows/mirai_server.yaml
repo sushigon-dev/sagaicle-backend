@@ -18,10 +18,10 @@ jobs:
         with:
           go-version: "1.24.0" # 使用している Go のバージョンに合わせて変更
 
-      - name: Build the Go binary
+      - name: Build the Go binary from cmd
         run: |
           go mod download
-          go build -o sagaicle .
+          go build -o myapp ./cmd
 
       - name: Copy binary to VPS
         uses: appleboy/scp-action@v0.1.6
