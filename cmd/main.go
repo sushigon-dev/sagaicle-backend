@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"os"
-	"strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -44,14 +43,17 @@ func main() {
 
 	// CORS ミドルウェアの設定
 	r.Use(cors.New(cors.Config{
-		AllowOriginFunc: func(origin string) bool {
-			// origin が 次のいずれかで始まれば許可する
-			return strings.HasPrefix(origin, "http://localhost") ||
-				strings.HasPrefix(origin, "https://sushigon-dev.github.io") ||
-				strings.HasPrefix(origin, "https://sagaicle-frontend-btwp.vercel.app")
-		},
+		/*
+			AllowOriginFunc: func(origin string) bool {
+				// origin が 次のいずれかで始まれば許可する
+				return strings.HasPrefix(origin, "http://localhost") ||
+					strings.HasPrefix(origin, "https://sushigon-dev.github.io") ||
+					strings.HasPrefix(origin, "https://sagaicle-frontend-btwp.vercel.app")
+			},
+		*/
+		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Content-Length", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
