@@ -21,7 +21,7 @@ jobs:
       - name: Build the Go binary from cmd
         run: |
           go mod download
-          go build -o sagaicle ./cmd
+          CGO_ENABLED=0 go build -a -installsuffix cgo -o sagaicle ./cmd
 
       - name: Copy binary to VPS
         uses: appleboy/scp-action@v0.1.6
