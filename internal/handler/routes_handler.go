@@ -103,8 +103,6 @@ func (h *Handler) GetRouteByID(c *gin.Context) {
 
 // 検索条件に基づいてルート一覧を取得
 func (h *Handler) SearchRoutes(c *gin.Context) {
-	logger.Info("OK", "OK")
-
 	var criteria domain.SearchCriteria
 	if err := c.BindJSON(&criteria); err != nil {
 		logger.Error(err, "リクエストのバインドに失敗")
