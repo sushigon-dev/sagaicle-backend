@@ -31,7 +31,7 @@ func (h *Handler) Register(c *gin.Context) {
 	// 登録成功後、Cookie の設定等も行えます（ここではシンプルにユーザー名のみ返す）
 	c.JSON(http.StatusCreated, gin.H{
 		"user_name": user.UserName,
-		"error":     "",
+		"error":     "認証認可未実装なのでこの機能も未実装",
 	})
 }
 
@@ -57,7 +57,7 @@ func (h *Handler) Login(c *gin.Context) {
 	// ここでトークン発行や Cookie 設定を行うのが一般的です
 	c.JSON(http.StatusOK, gin.H{
 		"user_name": user.UserName,
-		"error":     "",
+		"error":     "認証認可未実装なのでこの機能も未実装",
 	})
 }
 
@@ -81,17 +81,15 @@ func (h *Handler) Whoami(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"user_id":   user.ID.String(),
 		"user_name": user.UserName,
-		"error":     "",
+		"error":     "認証認可未実装なのでこの機能も未実装",
 	})
 }
 
 // ログアウト処理（例：トークンの無効化）を行う
 func (h *Handler) Logout(c *gin.Context) {
-	/*
-		// 実際にはトークン無効化や Cookie のクリア等の処理を行う
-		c.JSON(http.StatusOK, gin.H{
-			"token": "",
-			"error": "",
-		})
-	*/
+	// [TODO]トークン無効化や Cookie のクリア等の処理を行う
+	c.JSON(http.StatusOK, gin.H{
+		"token": "",
+		"error": "認証認可未実装なのでこの機能も未実装",
+	})
 }

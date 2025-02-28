@@ -13,35 +13,33 @@ import (
 // ユーザーが訪問したチェックポイント一覧を取得
 // ここでは、サービス層でそのロジックを実装しているものと仮定
 func (h *Handler) GetVisitedCheckpoints(c *gin.Context) {
-	/*
-				routeIDStr := c.Param("route_id")
-				routeID, err := uuid.Parse(routeIDStr)
-				if err != nil {
-		            logger.Error(err, "route_idのパースに失敗")
-					c.JSON(http.StatusBadRequest, gin.H{"error": })
-					return
-				}
-				userIDStr := c.GetHeader("X-User-ID")
-				userID, err := uuid.Parse(userIDStr)
-				if err != nil {
-		            logger.Error(err, "X-User-IDのパースに失敗")
-					c.JSON(http.StatusUnauthorized, gin.H{"error": })
-					return
-				}
+	routeIDStr := c.Param("route_id")
+	routeID, err := uuid.Parse(routeIDStr)
+	if err != nil {
+		logger.Error(err, "route_idのパースに失敗")
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InvalidFormat})
+		return
+	}
+	userIDStr := c.GetHeader("X-User-ID")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		logger.Error(err, "X-User-IDのパースに失敗")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": errors.InvalidFormat})
+		return
+	}
 
-					// サービス層に実装があると仮定
-					visited, err := h.checkpointsService.VisitCheckpoint(userID, routeID)
-					if err != nil {
-		                logger.Error(err, "チェックポイント訪問記録の取得に失敗")
-						c.JSON(http.StatusInternalServerError, gin.H{"error": })
-						return
-					}
-					c.JSON(http.StatusOK, gin.H{
-						"route_id":            routeID.String(),
-						"visited_checkpoints": visited,
-						"error":               "",
-					})
-	*/
+	// サービス層に実装があると仮定
+	// visited, err := h.checkpointsService.VisitCheckpoint(userID, routeID)
+	if err := h.checkpointsService.VisitCheckpoint(userID, routeID, 0); err != nil {
+		logger.Error(err, "チェックポイント訪問記録の取得に失敗")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.InternalServer})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"route_id": routeID.String(),
+		// "visited_checkpoints": visited,
+		"error": "認証認可未実装なのでこの機能も未実装",
+	})
 }
 
 // 指定のチェックポイント訪問記録を追加
@@ -82,6 +80,6 @@ func (h *Handler) VisitCheckpoint(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"route_id":         routeID.String(),
 		"checkpoint_index": cpIndex,
-		"error":            "",
+		"error":            "認証認可未実装なのでこの機能も未実装",
 	})
 }

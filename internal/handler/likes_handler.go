@@ -38,7 +38,7 @@ func (h *Handler) IsLiked(c *gin.Context) {
 		"route_id": routeID.String(),
 		"is_liked": isLiked,
 		"likes":    likes,
-		"error":    "",
+		"error":    "認証認可未実装なのでこの機能も未実装",
 	})
 }
 
@@ -76,7 +76,7 @@ func (h *Handler) LikeRoute(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"route_id": routeID.String(),
 		"likes":    likes,
-		"error":    "",
+		"error":    "認証認可未実装なのでこの機能も未実装",
 	})
 }
 
@@ -114,6 +114,6 @@ func (h *Handler) DislikeRoute(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"route_id": routeID.String(),
 		"likes":    likes,
-		"error":    "",
+		"error":    "認証認可未実装なのでこの機能も未実装",
 	})
 }
