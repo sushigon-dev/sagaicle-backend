@@ -21,6 +21,7 @@ func (r *SQLiteRepository) CreateUser(user *domain.User) error {
 	if err != nil {
 		logger.LogError(err, "ユーザー登録に失敗")
 	}
+
 	return err
 }
 
@@ -42,6 +43,7 @@ func (r *SQLiteRepository) GetUserByID(id uuid.UUID) (*domain.User, error) {
 		logger.LogError(err, "ID によるユーザー情報の取得に失敗")
 		return nil, err
 	}
+
 	user := &domain.User{
 		ID:            id,
 		UserName:      row.UserName,
@@ -70,11 +72,13 @@ func (r *SQLiteRepository) GetUserByUsername(username string) (*domain.User, err
 		logger.LogError(err, "ユーザー名からのユーザー情報取得に失敗")
 		return nil, err
 	}
+
 	uid, err := uuid.Parse(row.UserID)
 	if err != nil {
 		logger.LogError(err, "User ID のパースに失敗")
 		return nil, err
 	}
+
 	user := &domain.User{
 		ID:            uid,
 		UserName:      row.UserName,
