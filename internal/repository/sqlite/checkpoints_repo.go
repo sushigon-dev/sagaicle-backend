@@ -21,6 +21,7 @@ func (r *SQLiteRepository) CreateCheckpoints(routeID uuid.UUID, checkpoints []do
 		logger.LogError(err, "トランザクションの開始に失敗")
 		return err
 	}
+
 	for idx, cp := range checkpoints {
 		if _, err := tx.Exec(query, routeID.String(), idx, cp.Name, cp.Lat, cp.Lng); err != nil {
 			tx.Rollback()
@@ -28,6 +29,7 @@ func (r *SQLiteRepository) CreateCheckpoints(routeID uuid.UUID, checkpoints []do
 			return err
 		}
 	}
+
 	return tx.Commit()
 }
 
@@ -44,6 +46,7 @@ func (r *SQLiteRepository) GetCheckpointsByRouteID(routeID uuid.UUID) ([]domain.
 		logger.LogError(err, "チェックポイントの取得に失敗")
 		return nil, err
 	}
+
 	return checkpoints, nil
 }
 
@@ -57,5 +60,6 @@ func (r *SQLiteRepository) VisitCheckpoint(userID, routeID uuid.UUID, checkpoint
 	if err != nil {
 		logger.LogError(err, "チェックポイントの訪問記録の追加に失敗")
 	}
+
 	return err
 }
