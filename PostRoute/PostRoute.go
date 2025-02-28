@@ -2,10 +2,8 @@ package PostRoute
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -64,24 +62,14 @@ func (h *PostHandler) PostRoute(c *gin.Context) {
 	tagsString := strings.Join(route.Tags, ",")
 	_, err = h.DB.Exec(`INSERT INTO routes (ROUTE_ID, TAGS) VALUES (?, ?)`, route.ID, tagsString)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert tags"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert tags" + err.Error()})
 		return
 	}
 
 	// 画像URLをデータベースに保存
 	imgString := strings.Join(route.Images, ",")
-	_, err = h.DB.Exec(`INSERT INTO routes (IMAGES) VALUES (?) WHERE id = ?`, imgString, route.ID)
+	_, err = h.DB.Exec(`INSERT OR REPLACE INTO routes (ID, IMAGES) VALUES (?, ?)`, route.ID, imgString)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert tags"})
-		return
-	}
-
-	//時刻をデータベースに保存
-	now := time.Now()
-	_, err = h.DB.Exec(`INSERT INTO routes (UPDATE_AT) VALUES (?) WHERE id = ?`, now, route.ID)
-	fmt.Println(now)
-	if err != nil {
-
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert tags" + err.Error()})
 		return
 	}
