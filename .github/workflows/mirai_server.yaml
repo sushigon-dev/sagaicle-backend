@@ -40,6 +40,8 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.VPS_PORT }}
+          with:
+            source: "/home/miray/sagaicle"
           script: |
             cd /home/miray/
             chmod +x sagaicle
