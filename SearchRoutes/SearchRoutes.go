@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -32,15 +31,15 @@ type SearchRequest struct {
 
 // ルート情報のレスポンス用構造体
 type Route struct {
-	ID          string   `json:"id"`
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	Distance    float64  `json:"distance"`
-	Time        int      `json:"time"`
-	Tags        []string `json:"tags"`
-	Likes       int      `json:"likes"`
-	Image       string   `json:"image"`
-	UpdateAt    string   `json:"update_at"`
+	ID          string  `json:"id"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	Distance    float64 `json:"distance"`
+	Time        int     `json:"time"`
+	Tags        string  `json:"tags"`
+	Likes       int     `json:"likes"`
+	Image       string  `json:"image"`
+	UpdateAt    string  `json:"update_at"`
 }
 
 // レスポンスの構造体
@@ -63,9 +62,10 @@ func (h *SearchHandler) SearchRoutes(c *gin.Context) {
 	}
 
 	// SQL クエリの作成
-	query := `SELECT ID, TITLE, DESCRIPTION, DISTANCE, TIME, TAGS, LIKES, IMAGE, UPDATE_AT FROM SearchRoutes WHERE 1=1`
+	query := `SELECT ID, TITLE, DESCRIPTION, DISTANCE, TIME, TAGS, LIKES, IMAGE, UPDATE_AT FROM routes WHERE 1=1`
 	args := []interface{}{}
 
+	//OR検索に対応させる
 	// 距離のフィルタ
 	if req.Distance.Min >= 0 {
 		query += " AND distance >= ?"
@@ -85,36 +85,37 @@ func (h *SearchHandler) SearchRoutes(c *gin.Context) {
 		query += " AND time <= ?"
 		args = append(args, req.Time.Max)
 	}
+	/*
+		// タグ検索の処理
+		if len(req.Tags) > 0 {
+			tagConditions := []string{}
+			for _, tag := range req.Tags {
+				tagConditions = append(tagConditions, "tags LIKE ?")
+				args = append(args, "%"+tag+"%")
+			}
 
-	// タグ検索の処理
-	if len(req.Tags) > 0 {
-		tagConditions := []string{}
-		for _, tag := range req.Tags {
-			tagConditions = append(tagConditions, "tags LIKE ?")
-			args = append(args, "%"+tag+"%")
+			// switch req.SearchOption {
+			// case "AND":
+			// 	query += " AND (" + strings.Join(tagConditions, " AND ") + ")"
+			// case "NOT":
+			// 	query += " AND NOT (" + strings.Join(tagConditions, " OR ") + ")"
+			// default: // "OR"
+			// 	query += " AND (" + strings.Join(tagConditions, " OR ") + ")"
+			// }
 		}
-
-		switch req.SearchOption {
-		case "AND":
-			query += " AND (" + strings.Join(tagConditions, " AND ") + ")"
-		case "NOT":
-			query += " AND NOT (" + strings.Join(tagConditions, " OR ") + ")"
-		default: // "OR"
-			query += " AND (" + strings.Join(tagConditions, " OR ") + ")"
+	*/
+	/*
+		// ソート条件
+		sortKey := "likes"
+		if req.Sort.Key == "distance" || req.Sort.Key == "time" || req.Sort.Key == "update_at" {
+			sortKey = req.Sort.Key
 		}
-	}
-
-	// ソート条件
-	sortKey := "likes"
-	if req.Sort.Key == "distance" || req.Sort.Key == "time" || req.Sort.Key == "update_at" {
-		sortKey = req.Sort.Key
-	}
-	sortOrder := "ASC"
-	if req.Sort.Order == "desc" {
-		sortOrder = "DESC"
-	}
-	query += " ORDER BY " + sortKey + " " + sortOrder
-
+		sortOrder := "ASC"
+		if req.Sort.Order == "desc" {
+			sortOrder = "DESC"
+		}
+		query += " ORDER BY " + sortKey + " " + sortOrder
+	*/
 	// 取得制限
 	limit := 12
 	if req.Limit >= 1 && req.Limit <= 60 {
@@ -130,22 +131,19 @@ func (h *SearchHandler) SearchRoutes(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database query failed"})
 		return
 	}
-	defer rows.Close()
 
 	// 結果を格納
 	var routes []Route
 	for rows.Next() {
 		var route Route
-		var tags string
-		if err := rows.Scan(&route.ID, &route.Title, &route.Description, &route.Distance, &route.Time, &tags, &route.Likes, &route.Image, &route.UpdateAt); err != nil {
+		if err := rows.Scan(&route.ID, &route.Title, &route.Description, &route.Distance, &route.Time, &route.Tags, &route.Likes, &route.Image, &route.UpdateAt); err != nil {
 			log.Println("Scan Error:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Data scan error"})
+			c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Data scan error" + err.Error()})
 			return
 		}
-		route.Tags = strings.Split(tags, ",") // タグを配列に変換
 		routes = append(routes, route)
 	}
-
+	defer rows.Close()
 	// レスポンスを返す
 	response := SearchResponse{
 		HitCount: len(routes),
@@ -154,3 +152,17 @@ func (h *SearchHandler) SearchRoutes(c *gin.Context) {
 	}
 	c.IndentedJSON(http.StatusOK, response)
 }
+
+/* リクエスト例 */
+/*
+curl -X POST "http://localhost:8080/api/search" \
+     -H "Content-Type: application/json" \
+     -d '{
+           "distance": { "min": 0, "max": 20000},
+           "time": { "min": 0, "max": 1800 },
+           "tags": ["mountain", "scenic", "hiking", "nature"],
+           "search_option": "OR",
+           "sort": { "order": "desc" },
+           "limit": 10
+         }'
+*/
