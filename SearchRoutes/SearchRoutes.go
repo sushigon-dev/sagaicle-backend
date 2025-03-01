@@ -199,37 +199,6 @@ func (h *SearchHandler) SearchRoutes(c *gin.Context) {
 
 	}
 
-	/*
-		// タグ検索の処理
-		if len(req.Tags) > 0 {
-			tagConditions := []string{}
-			for _, tag := range req.Tags {
-				tagConditions = append(tagConditions, "tags LIKE ?")
-				args = append(args, "%"+tag+"%")
-			}
-
-			// switch req.SearchOption {
-			// case "AND":
-			// 	query += " AND (" + strings.Join(tagConditions, " AND ") + ")"
-			// case "NOT":
-			// 	query += " AND NOT (" + strings.Join(tagConditions, " OR ") + ")"
-			// default: // "OR"
-			// 	query += " AND (" + strings.Join(tagConditions, " OR ") + ")"
-			// }
-		}
-	*/
-	/*
-		// ソート条件
-		sortKey := "likes"
-		if req.Sort.Key == "distance" || req.Sort.Key == "time" || req.Sort.Key == "update_at" {
-			sortKey = req.Sort.Key
-		}
-		sortOrder := "ASC"
-		if req.Sort.Order == "desc" {
-			sortOrder = "DESC"
-		}
-		query += " ORDER BY " + sortKey + " " + sortOrder
-	*/
 }
 
 /* リクエスト例 */
