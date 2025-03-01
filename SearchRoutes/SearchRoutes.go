@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -85,6 +86,15 @@ func (h *SearchHandler) SearchRoutes(c *gin.Context) {
 		query := "SELECT * FROM routes WHERE (DISTANCE BETWEEN ? AND ?) AND (TIME BETWEEN ? AND ?)"
 		args := []interface{}{req.Distance.Min, req.Distance.Max, req.Time.Min, req.Time.Max}
 
+		if len(req.Tags) > 0 {
+			tagConditions := []string{}
+			for _, tag := range req.Tags {
+				tagConditions = append(tagConditions, "tags LIKE ?")
+				args = append(args, "%"+tag+"%")
+			}
+			query += "AND (" + strings.Join(tagConditions, " OR ") + ")"
+		}
+
 		// 取得制限
 		limit := 12
 		if req.Limit >= 1 && req.Limit <= 60 {
@@ -137,6 +147,15 @@ func (h *SearchHandler) SearchRoutes(c *gin.Context) {
 	case "OR":
 		query := "SELECT * FROM routes WHERE (DISTANCE BETWEEN ? AND ?) OR (TIME BETWEEN ? AND ?)"
 		args := []interface{}{req.Distance.Min, req.Distance.Max, req.Time.Min, req.Time.Max}
+
+		if len(req.Tags) > 0 {
+			tagConditions := []string{}
+			for _, tag := range req.Tags {
+				tagConditions = append(tagConditions, "tags LIKE ?")
+				args = append(args, "%"+tag+"%")
+			}
+			query += "OR (" + strings.Join(tagConditions, " OR ") + ")"
+		}
 
 		rows, err := h.DB.Query(query, args...)
 		if err != nil {
