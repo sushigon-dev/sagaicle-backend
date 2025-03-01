@@ -46,7 +46,7 @@ func (h *RouteHandler) GetRoute(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, receive)
+	c.IndentedJSON(http.StatusOK, receive)
 }
 
 //GetRouteへのリクエスト時は

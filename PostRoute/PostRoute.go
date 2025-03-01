@@ -49,8 +49,8 @@ func (h *PostHandler) PostRoute(c *gin.Context) {
 	_, err := h.DB.Exec(`
 		INSERT INTO routes (ID, TITLE, DESCRIPTION, FULL_DESCRIPTION, DISTANCE, TIME, TOTAL_CHECKPOINTS, MAP)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-		route.ID, route.Title, route.Description, route.FullDescription, route.Distance, route.Time, route.TotalCheckpoints, route.Map,
-	)
+		route.ID, route.Title, route.Description, route.FullDescription, route.Distance, route.Time, route.TotalCheckpoints, route.Map)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert route"})
 		return
@@ -95,13 +95,12 @@ func (h *PostHandler) PostRoute(c *gin.Context) {
 	*/
 
 	// 受け取ったデータをそのままレスポンスとして返す
-	c.JSON(http.StatusOK, route)
+	c.IndentedJSON(http.StatusOK, route)
 }
 
 //リクエスト例
 /*
 curl -X POST "http://localhost:8080/api/routes" \
--H "Authorization: Bearer <YOUR_TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "サンプルルート",
