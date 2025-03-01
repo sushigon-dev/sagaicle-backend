@@ -36,14 +36,14 @@ func (h *RouteHandler) GetRoute(c *gin.Context) {
 
 	var receive route
 
-	err := h.DB.QueryRow("SELECT * FROM routes WHERE ID = ?", id).
+	err := h.DB.QueryRow("SELECT ID, TITLE, DESCRIPTION, FULL_DESCRIPTION, DISTANCE, TIME, TAGS, TOTAL_CHECKPOINTS, IMAGES, MAP, UPDATE_AT FROM routes WHERE ID = ?", id).
 		Scan(&receive.ID, &receive.TITLE, &receive.DESCRIPTION, &receive.FULL_DESCRIPTION,
 			&receive.DISTANCE, &receive.TIME, &receive.TAGS, &receive.CHECKPOINT_COUNT, &receive.IMAGES, &receive.MAP, &receive.UPDATE)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "route not found"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "route not found " + err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, receive)
+	c.IndentedJSON(http.StatusOK, receive)
 }
