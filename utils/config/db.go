@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"log"
@@ -9,7 +9,7 @@ import (
 	"github.com/sushigon-dev/sagaicle/utils/logger"
 )
 
-func configDB() *sqlx.DB {
+func DB() *sqlx.DB {
 	// sqlx を利用して SQLite データベースに接続
 	db, err := sqlx.Open("sqlite3", "./sagaicle.db")
 	if err != nil {
@@ -38,24 +38,5 @@ func configDB() *sqlx.DB {
 		log.Fatalf("SQLite データベースへの接続確認に失敗しました: %v", err)
 	}
 
-	// 必要なテーブルがなければ作成する
-	if err := createTables(db); err != nil {
-		logger.LogError(err, "テーブル作成に失敗")
-		log.Fatalf("テーブル作成に失敗しました: %v", err)
-	}
-
 	return db
-}
-
-// createTables は必要なテーブルを作成します。
-// ここでは tags テーブルを例として作成しています。
-func createTables(db *sqlx.DB) error {
-	schema := `
-    CREATE TABLE IF NOT EXISTS tags (
-        tag TEXT PRIMARY KEY,
-        CHECK (LENGTH(tag) BETWEEN 1 AND 10)
-    );
-	`
-	_, err := db.Exec(schema)
-	return err
 }

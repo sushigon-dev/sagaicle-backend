@@ -9,11 +9,12 @@ import (
 	"github.com/sushigon-dev/sagaicle/internal/handler"
 	"github.com/sushigon-dev/sagaicle/internal/repository/sqlite"
 	"github.com/sushigon-dev/sagaicle/internal/service"
+	"github.com/sushigon-dev/sagaicle/utils/config"
 )
 
 func main() {
 	// db の設定
-	db := configDB()
+	db := config.DB()
 	defer db.Close()
 
 	// リポジトリの初期化
