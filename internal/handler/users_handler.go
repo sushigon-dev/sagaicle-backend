@@ -5,6 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/sushigon-dev/sagaicle/utils/errors"
+	"github.com/sushigon-dev/sagaicle/utils/logger"
 )
 
 // 新規ユーザー登録のリクエストを処理
@@ -14,14 +16,18 @@ func (h *Handler) Register(c *gin.Context) {
 		Password string `json:"password"`
 	}
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		logger.LogError(err, "JSONのバインドに失敗")
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InvalidFormat})
 		return
 	}
+
 	user, err := h.usersService.Register(req.UserName, req.Password)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		logger.LogError(err, "ユーザー登録に失敗")
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InternalServer})
 		return
 	}
+
 	// 登録成功後、Cookie の設定等も行えます（ここではシンプルにユーザー名のみ返す）
 	c.JSON(http.StatusCreated, gin.H{
 		"user_name": user.UserName,
@@ -36,14 +42,18 @@ func (h *Handler) Login(c *gin.Context) {
 		Password string `json:"password"`
 	}
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		logger.LogError(err, "JSONのバインドに失敗")
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InvalidFormat})
 		return
 	}
+
 	user, err := h.usersService.Login(req.UserName, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		logger.LogError(err, "ログインに失敗")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": errors.InternalServer})
 		return
 	}
+
 	// ここでトークン発行や Cookie 設定を行うのが一般的です
 	c.JSON(http.StatusOK, gin.H{
 		"user_name": user.UserName,
@@ -56,14 +66,18 @@ func (h *Handler) Whoami(c *gin.Context) {
 	userIDStr := c.GetHeader("X-User-ID")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		logger.LogError(err, "ユーザーIDのパースに失敗")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": errors.InvalidFormat})
 		return
 	}
+
 	user, err := h.usersService.GetUserProfile(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		logger.LogError(err, "ユーザー情報の取得に失敗")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.InternalServer})
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"user_id":   user.ID.String(),
 		"user_name": user.UserName,

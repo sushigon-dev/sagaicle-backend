@@ -3,6 +3,7 @@ package sqlite
 import (
 	"github.com/google/uuid"
 	"github.com/sushigon-dev/sagaicle/internal/domain"
+	"github.com/sushigon-dev/sagaicle/utils/logger"
 )
 
 // 新規ユーザーを登録
@@ -17,6 +18,10 @@ func (r *SQLiteRepository) CreateUser(user *domain.User) error {
 	_, err := r.db.Exec(query,
 		user.ID.String(), user.UserName, user.PasswordHash, user.Mileage, user.TotalDistance,
 	)
+	if err != nil {
+		logger.LogError(err, "ユーザー登録に失敗")
+	}
+
 	return err
 }
 
@@ -35,8 +40,10 @@ func (r *SQLiteRepository) GetUserByID(id uuid.UUID) (*domain.User, error) {
 		TotalDistance  float64 `db:"total_distance"`
 	}
 	if err := r.db.Get(&row, query, id.String()); err != nil {
+		logger.LogError(err, "ID によるユーザー情報の取得に失敗")
 		return nil, err
 	}
+
 	user := &domain.User{
 		ID:            id,
 		UserName:      row.UserName,
@@ -62,12 +69,16 @@ func (r *SQLiteRepository) GetUserByUsername(username string) (*domain.User, err
 		TotalDistance  float64 `db:"total_distance"`
 	}
 	if err := r.db.Get(&row, query, username); err != nil {
+		logger.LogError(err, "ユーザー名からのユーザー情報取得に失敗")
 		return nil, err
 	}
+
 	uid, err := uuid.Parse(row.UserID)
 	if err != nil {
+		logger.LogError(err, "User ID のパースに失敗")
 		return nil, err
 	}
+
 	user := &domain.User{
 		ID:            uid,
 		UserName:      row.UserName,
@@ -85,5 +96,8 @@ func (r *SQLiteRepository) AddBadgedRoute(userID uuid.UUID, route domain.BadgedR
         VALUES (?, ?, ?);
     `
 	_, err := r.db.Exec(query, userID.String(), route.ID, route.Title)
+	if err != nil {
+		logger.LogError(err, "バッジ付きルートの記録追加に失敗")
+	}
 	return err
 }

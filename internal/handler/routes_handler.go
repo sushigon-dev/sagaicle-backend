@@ -6,6 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/sushigon-dev/sagaicle/internal/domain"
+	"github.com/sushigon-dev/sagaicle/utils/errors"
+	"github.com/sushigon-dev/sagaicle/utils/logger"
 )
 
 // ルートの作成リクエストを処理
@@ -23,7 +25,8 @@ func (h *Handler) CreateRoute(c *gin.Context) {
 		Checkpoints      []domain.Checkpoint `json:"checkpoints"`
 	}
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		logger.LogError(err, "リクエストのバインドに失敗")
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InvalidFormat})
 		return
 	}
 
@@ -42,7 +45,8 @@ func (h *Handler) CreateRoute(c *gin.Context) {
 
 	// サービス層で入力検証、UUID発行、更新日時設定などが行われる
 	if err := h.routesService.CreateRoute(route); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		logger.LogError(err, "ルートの作成に失敗")
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InternalServer})
 		return
 	}
 
@@ -68,14 +72,18 @@ func (h *Handler) GetRouteByID(c *gin.Context) {
 	routeIDStr := c.Param("route_id")
 	routeID, err := uuid.Parse(routeIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid route ID"})
+		logger.LogError(err, "route_idのパースに失敗")
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InvalidFormat})
 		return
 	}
+
 	route, err := h.routesService.GetRouteByID(routeID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		logger.LogError(err, "route_idからルートの取得に失敗")
+		c.JSON(http.StatusNotFound, gin.H{"error": errors.InternalServer})
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"route_id":          route.ID.String(),
 		"title":             route.Title,
@@ -96,26 +104,30 @@ func (h *Handler) GetRouteByID(c *gin.Context) {
 // 検索条件に基づいてルート一覧を取得
 func (h *Handler) SearchRoutes(c *gin.Context) {
 	/*
-		var criteria domain.SearchCriteria
-		if err := c.BindJSON(&criteria); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		routes, hitCount, err := h. routesService.SearchRoutes(&criteria)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{
-			"hit_count":     hitCount,
-			"routes":        routes,
-			"distance":      criteria.Distance,
-			"time":          criteria.Time,
-			"tags":          criteria.Tags,
-			"search_option": criteria.SearchOption,
-			"sort":          criteria.Sort,
-			"limit":         criteria.Limit,
-			"error":         "",
-		})
+					var criteria domain.SearchCriteria
+					if err := c.BindJSON(&criteria); err != nil {
+		                logger.LogError(err, "リクエストのバインドに失敗")
+						c.JSON(http.StatusBadRequest, gin.H{"error": errors.})
+						return
+					}
+
+					routes, hitCount, err := h. routesService.SearchRoutes(&criteria)
+					if err != nil {
+		                logger.LogError(err, "ルートの検索に失敗")
+						c.JSON(http.StatusInternalServerError, gin.H{"error": errors.})
+						return
+					}
+
+					c.JSON(http.StatusOK, gin.H{
+						"hit_count":     hitCount,
+						"routes":        routes,
+						"distance":      criteria.Distance,
+						"time":          criteria.Time,
+						"tags":          criteria.Tags,
+						"search_option": criteria.SearchOption,
+						"sort":          criteria.Sort,
+						"limit":         criteria.Limit,
+						"error":         "",
+					})
 	*/
 }

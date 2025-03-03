@@ -3,6 +3,7 @@ package sqlite
 import (
 	"github.com/google/uuid"
 	"github.com/sushigon-dev/sagaicle/internal/domain"
+	"github.com/sushigon-dev/sagaicle/utils/logger"
 )
 
 // 指定したルート ID に対するチェックポイント群を登録
@@ -17,14 +18,18 @@ func (r *SQLiteRepository) CreateCheckpoints(routeID uuid.UUID, checkpoints []do
     `
 	tx, err := r.db.Beginx()
 	if err != nil {
+		logger.LogError(err, "トランザクションの開始に失敗")
 		return err
 	}
+
 	for idx, cp := range checkpoints {
 		if _, err := tx.Exec(query, routeID.String(), idx, cp.Name, cp.Lat, cp.Lng); err != nil {
 			tx.Rollback()
+			logger.LogError(err, "チェックポイントの登録に失敗")
 			return err
 		}
 	}
+
 	return tx.Commit()
 }
 
@@ -38,8 +43,10 @@ func (r *SQLiteRepository) GetCheckpointsByRouteID(routeID uuid.UUID) ([]domain.
     `
 	var checkpoints []domain.Checkpoint
 	if err := r.db.Select(&checkpoints, query, routeID.String()); err != nil {
+		logger.LogError(err, "チェックポイントの取得に失敗")
 		return nil, err
 	}
+
 	return checkpoints, nil
 }
 
@@ -50,5 +57,9 @@ func (r *SQLiteRepository) VisitCheckpoint(userID, routeID uuid.UUID, checkpoint
         VALUES (?, ?, ?);
     `
 	_, err := r.db.Exec(query, userID.String(), routeID.String(), checkpointIndex)
+	if err != nil {
+		logger.LogError(err, "チェックポイントの訪問記録の追加に失敗")
+	}
+
 	return err
 }
