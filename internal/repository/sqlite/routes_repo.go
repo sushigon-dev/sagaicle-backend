@@ -57,7 +57,7 @@ func (r *SQLiteRepository) CreateRoute(route *domain.Route) error {
 
 	// 画像の登録：Route_Imagesテーブルに対して、ルートIDと画像URIを登録する
 	for _, imageURI := range route.Images {
-		imageQuery := `INSERT INTO route_images (route_id, image_uri) VALUES (?, ?);`
+		imageQuery := `INSERT INTO route_images (route_id, image) VALUES (?, ?);`
 		_, err = r.db.Exec(imageQuery, route.ID.String(), imageURI)
 		if err != nil {
 			logger.LogError(err, "画像の登録に失敗: "+imageURI)
