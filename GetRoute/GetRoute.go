@@ -39,9 +39,8 @@ func (h *RouteHandler) GetRoute(c *gin.Context) {
 	err := h.DB.QueryRow("SELECT ID, TITLE, DESCRIPTION, FULL_DESCRIPTION, DISTANCE, TIME, TAGS, TOTAL_CHECKPOINTS, IMAGES, MAP, UPDATE_AT FROM routes WHERE ID = ?", id).
 		Scan(&receive.ID, &receive.TITLE, &receive.DESCRIPTION, &receive.FULL_DESCRIPTION,
 			&receive.DISTANCE, &receive.TIME, &receive.TAGS, &receive.TOTAL_CHECKPOINTS, &receive.IMAGES, &receive.MAP, &receive.UPDATE_AT)
-
 	if err != nil {
-		//エラーを表示すること
+		// エラーを表示すること
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "route not found" + err.Error()})
 		return
 	}
@@ -49,6 +48,6 @@ func (h *RouteHandler) GetRoute(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, receive)
 }
 
-//GetRouteへのリクエスト時は
-//idはシングルクォ-トでかこむ
-//例：SELECT ID, TITLE, DESCRIPTION, FULL_DESCRIPTION, DISTANCE, TIME, TAGS, TOTAL_CHECKPOINTS, IMAGES, MAP, UPDATE_AT FROM routes WHERE ID = '0a929a67-d964-4c1b-aa8a-12ddc08ed957';
+// GetRouteへのリクエスト時は
+// idはシングルクォ-トでかこむ
+// 例：SELECT ID, TITLE, DESCRIPTION, FULL_DESCRIPTION, DISTANCE, TIME, TAGS, TOTAL_CHECKPOINTS, IMAGES, MAP, UPDATE_AT FROM routes WHERE ID = '0a929a67-d964-4c1b-aa8a-12ddc08ed957';
