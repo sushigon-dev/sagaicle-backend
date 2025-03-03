@@ -44,13 +44,19 @@ func (r *SQLiteRepository) CreateRoute(route *domain.Route) error {
 		return err
 	}
 
-	// タグの登録：Route_Tagsテーブルに対して、ルートIDとタグ名を登録する
 	for _, tag := range route.Tags {
-		tagQuery := `INSERT INTO route_tags (route_id, tag_name) VALUES (?, ?);`
-		_, err = r.db.Exec(tagQuery, route.ID.String(), tag)
-		if err != nil {
-			logger.LogError(err, "タグの登録に失敗: "+
-				fmt.Sprint(tagQuery, route.ID.String(), tag))
+		// タグマスターへの登録：tags テーブルにタグを追加（既に存在する場合は無視）
+		tagInsertQuery := `INSERT OR IGNORE INTO tags (tag) VALUES (?);`
+		if _, err := r.db.Exec(tagInsertQuery, tag); err != nil {
+			logger.LogError(err, "タグマスターへの登録に失敗: "+tag)
+			return err
+		}
+
+		// ルートとタグの紐付け：Route_Tagsテーブルに対して、ルートIDとタグ名を登録
+		routeTagQuery := `INSERT INTO route_tags (route_id, tag_name) VALUES (?, ?);`
+		if _, err = r.db.Exec(routeTagQuery, route.ID.String(), tag); err != nil {
+			logger.LogError(err, "ルートタグの登録に失敗: "+
+				fmt.Sprint(routeTagQuery, route.ID.String(), tag))
 			return err
 		}
 	}
@@ -58,8 +64,7 @@ func (r *SQLiteRepository) CreateRoute(route *domain.Route) error {
 	// 画像の登録：Route_Imagesテーブルに対して、ルートIDと画像URIを登録する
 	for _, imageURI := range route.Images {
 		imageQuery := `INSERT INTO route_images (route_id, image) VALUES (?, ?);`
-		_, err = r.db.Exec(imageQuery, route.ID.String(), imageURI)
-		if err != nil {
+		if _, err = r.db.Exec(imageQuery, route.ID.String(), imageURI); err != nil {
 			logger.LogError(err, "画像の登録に失敗: "+imageURI)
 			return err
 		}
