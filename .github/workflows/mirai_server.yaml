@@ -30,8 +30,18 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          source: "sagaicle"
-          target: "/home/miray/"
+          source: ["sagaicle", "init.sql"]
+          target: "/home/miray/sushigon"
+
+      - name: Copy init.sql to VPS
+        uses: appleboy/scp-action@v0.1.6
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          source: "init.sql"
+          target: "/home/miray/sushigon"
 
       - name: Run remote commands on VPS
         uses: appleboy/ssh-action@v0.1.5
@@ -41,6 +51,6 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd /home/miray/
+            cd /home/miray/sushigon/
             chmod +x sagaicle
             systemctl --user restart sagaicle.service
