@@ -182,9 +182,14 @@ func (r *SQLiteRepository) SearchRoutes(criteria *domain.SearchCriteria) ([]doma
 	// タグ条件: タグが指定されている場合、検索オプションに応じたサブクエリでフィルタ
 	if len(criteria.Tags) > 0 {
 		// 検索オプションのデフォルトは "OR"
-		searchOption := "OR"
-		if len(criteria.SearchOption) > 0 {
-			searchOption = criteria.SearchOption[0]
+		var searchOption string
+		switch criteria.SearchOption {
+		case "OR", "AND", "NOT":
+			searchOption = criteria.SearchOption
+		default:
+			searchOption = "OR"
+			logger.Warnning("検索オプションが不正な値だったので、デフォルト値を利用",
+				criteria.SearchOption)
 		}
 
 		// タグリスト用のプレースホルダーを作成
