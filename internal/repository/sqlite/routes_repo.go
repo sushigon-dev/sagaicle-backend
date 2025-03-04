@@ -2,7 +2,6 @@ package sqlite
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -78,8 +77,9 @@ func (r *SQLiteRepository) CreateRoute(route *domain.Route) error {
 
 // 指定したルート ID の詳細情報を取得
 func (r *SQLiteRepository) GetRouteByID(id uuid.UUID) (*domain.Route, error) {
+	// routes テーブルから取得するクエリ
 	query := `
-        SELECT id, title, description, full_description, distance, time, tags, likes, image, update_at, total_checkpoints, images, map
+        SELECT id, title, description, full_description, distance, time, likes, image, update_at, total_checkpoints, map
         FROM routes
         WHERE id = ?;
     `
@@ -90,30 +90,15 @@ func (r *SQLiteRepository) GetRouteByID(id uuid.UUID) (*domain.Route, error) {
 		FullDescription  string  `db:"full_description"`
 		Distance         float64 `db:"distance"`
 		Time             int     `db:"time"`
-		Tags             string  `db:"tags"`
 		Likes            int     `db:"likes"`
 		Image            string  `db:"image"`
 		UpdateAt         string  `db:"update_at"`
 		TotalCheckpoints int     `db:"total_checkpoints"`
-		Images           string  `db:"images"`
 		Map              string  `db:"map"`
 	}
 
 	if err := r.db.Get(&row, query, id.String()); err != nil {
 		logger.Error(err, "ルートの取得に失敗"+fmt.Sprint(query, id.String()))
-		return nil, err
-	}
-
-	// JSON フィールドのデコード
-	var tags []string
-	if err := json.Unmarshal([]byte(row.Tags), &tags); err != nil {
-		logger.Error(err, "JSONのデコードに失敗")
-		return nil, err
-	}
-
-	var images []string
-	if err := json.Unmarshal([]byte(row.Images), &images); err != nil {
-		logger.Error(err, "JSONのデコードに失敗")
 		return nil, err
 	}
 
@@ -125,19 +110,37 @@ func (r *SQLiteRepository) GetRouteByID(id uuid.UUID) (*domain.Route, error) {
 	}
 
 	route := &domain.Route{
-		ID:               id,
-		Title:            row.Title,
-		Description:      row.Description,
-		FullDescription:  row.FullDescription,
-		Distance:         row.Distance,
-		Time:             row.Time,
-		Tags:             tags,
-		Likes:            row.Likes,
-		Images:           images,
+		ID:              id,
+		Title:           row.Title,
+		Description:     row.Description,
+		FullDescription: row.FullDescription,
+		Distance:        row.Distance,
+		Time:            row.Time,
+		Likes:           row.Likes,
+		// ルートサマリー用の image は routes テーブルの image を利用
+		Images:           nil, // 後で取得
 		Map:              row.Map,
 		TotalCheckpoints: row.TotalCheckpoints,
 		UpdateAt:         updatedAt,
 	}
+
+	// タグの取得（route_tags テーブルから）
+	tagsQuery := `SELECT tag_name FROM route_tags WHERE route_id = ?;`
+	var tags []string
+	if err := r.db.Select(&tags, tagsQuery, id.String()); err != nil {
+		logger.Error(err, "タグの取得に失敗")
+		return nil, err
+	}
+	route.Tags = tags
+
+	// 画像の取得（route_images テーブルから）
+	imagesQuery := `SELECT image FROM route_images WHERE route_id = ?;`
+	var images []string
+	if err := r.db.Select(&images, imagesQuery, id.String()); err != nil {
+		logger.Error(err, "画像の取得に失敗")
+		return nil, err
+	}
+	route.Images = images
 
 	// チェックポイントの取得
 	checkpoints, err := r.GetCheckpointsByRouteID(id)
