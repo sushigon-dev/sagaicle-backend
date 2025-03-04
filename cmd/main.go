@@ -43,7 +43,8 @@ func main() {
 
 	// CORS ミドルウェアの設定
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost", "https://sushigon-dev.github.io", "https://sagaicle-frontend-btwp.vercel.app"},
+		// AllowOrigins:     []string{"http://localhost", "https://sushigon-dev.github.io", "https://sagaicle-frontend-btwp.vercel.app"},
+		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Content-Length", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
