@@ -20,10 +20,10 @@ type Sort struct {
 
 // ルート検索の際のパラメータをまとめた値オブジェクト
 type SearchCriteria struct {
-	Distance     RangeFloat
-	Time         RangeInt
-	Tags         []string // タグ一覧
-	SearchOption []string // "AND", "OR", "NOT" などの検索オプション
-	Sort         Sort
-	Limit        int // 最大件数
+	Distance     RangeFloat `json:"distance"`      // 距離の範囲
+	Time         RangeInt   `json:"time"`          // 時間の範囲
+	Tags         []string   `json:"tags"`          // 検索に使うタグ名
+	SearchOption []string   `json:"search_option"` // タグの検索方法 "AND", "OR", "NOT"
+	Sort         Sort       `json:"sort"`          // 並び替え（キーと順序の）指定
+	Limit        int        `json:"limit"`         // 取得する最大件数
 }
