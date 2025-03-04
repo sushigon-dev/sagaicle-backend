@@ -30,3 +30,16 @@ func Warnning(warnning string, context string) {
 	}
 	log.Printf("[WARNNING] %s:%d %s() - %s: %s", file, line, funcName, context, warnning)
 }
+
+// 情報のラベルと追加情報を受け取り、発生箇所を自動的にログ出力
+func Info(info string, context any) {
+	// 呼び出し元の情報を取得
+	pc, file, line, ok := runtime.Caller(1)
+	funcName := "unknown"
+	if ok {
+		if f := runtime.FuncForPC(pc); f != nil {
+			funcName = f.Name()
+		}
+	}
+	log.Printf("[INFO] %s:%d %s() - %s: %s", file, line, funcName, info, context)
+}
