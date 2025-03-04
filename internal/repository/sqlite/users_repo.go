@@ -15,14 +15,14 @@ func (r *SQLiteRepository) CreateUser(user *domain.User) error {
             ?, ?, ?, ?, ?
         );
     `
-	_, err := r.db.Exec(query,
-		user.ID.String(), user.UserName, user.PasswordHash, user.Mileage, user.TotalDistance,
-	)
-	if err != nil {
+	if _, err := r.db.Exec(query, user.ID.String(),
+		user.UserName, user.PasswordHash, user.Mileage, user.TotalDistance,
+	); err != nil {
 		logger.LogError(err, "ユーザー登録に失敗")
+		return err
 	}
 
-	return err
+	return nil
 }
 
 // ユーザー ID によるユーザー情報取得
@@ -95,9 +95,10 @@ func (r *SQLiteRepository) AddBadgedRoute(userID uuid.UUID, route domain.BadgedR
         INSERT INTO badges (user_id, route_id, title)
         VALUES (?, ?, ?);
     `
-	_, err := r.db.Exec(query, userID.String(), route.ID, route.Title)
-	if err != nil {
+	if _, err := r.db.Exec(query, userID.String(), route.ID, route.Title); err != nil {
 		logger.LogError(err, "バッジ付きルートの記録追加に失敗")
+		return err
 	}
-	return err
+
+	return nil
 }
