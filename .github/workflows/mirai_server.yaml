@@ -57,4 +57,4 @@ jobs:
           script: |
             cd /home/miray/sushigon/
             chmod +x sagaicle
-            systemctl --user restart sagaicle.service
+            systemctl --user daemon-reload && systemctl --user restart sagaicle.service
