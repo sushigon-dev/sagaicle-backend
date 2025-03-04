@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sushigon-dev/sagaicle/internal/domain"
-	"github.com/sushigon-dev/sagaicle/utils"
 	"github.com/sushigon-dev/sagaicle/utils/logger"
 )
 
@@ -176,33 +176,45 @@ func (r *SQLiteRepository) SearchRoutes(criteria *domain.SearchCriteria) ([]doma
 		args = append(args, criteria.Time.Max)
 	}
 
-	// タグ条件: tags が空の場合は条件に含めない
+	// タグ条件: タグが指定されている場合、検索オプションに応じたサブクエリでフィルタ
 	if len(criteria.Tags) > 0 {
-		// search_option の初期値は "OR" とする（配列の先頭を利用）
+		// 検索オプションのデフォルトは "OR"
 		searchOption := "OR"
 		if len(criteria.SearchOption) > 0 {
 			searchOption = criteria.SearchOption[0]
 		}
 
-		var tagConditions []string
-		for _, tag := range criteria.Tags {
-			if searchOption == "NOT" {
-				tagConditions = append(tagConditions, "tags NOT LIKE ?")
-			} else {
-				tagConditions = append(tagConditions, "tags LIKE ?")
-			}
-			// JSON 配列として保存しているため、"%\"<tag>\"%" のパターンで検索
-			args = append(args, "%\""+tag+"\"%")
+		// タグリスト用のプレースホルダーを作成
+		placeholders := make([]string, len(criteria.Tags))
+		for i := range criteria.Tags {
+			placeholders[i] = "?"
 		}
 
-		// "AND" または "NOT" の場合は各条件を全て満たす必要があるので AND で結合、
-		// "OR" の場合はどれか1つでもマッチすればよいので OR で結合
-		op := " OR "
-		if searchOption == "AND" || searchOption == "NOT" {
-			op = " AND "
+		// サブクエリの組み立て
+		tagListClause := strings.Join(placeholders, ",")
+		switch searchOption {
+		case "OR":
+			// ルートが指定されたタグのいずれかを持っていればマッチ
+			whereClauses = append(whereClauses, "id IN (SELECT route_id FROM route_tags WHERE tag_name IN ("+tagListClause+"))")
+			for _, tag := range criteria.Tags {
+				args = append(args, tag)
+			}
+		case "AND":
+
+			// ルートが指定された全てのタグを持っている必要がある
+			whereClauses = append(whereClauses, "id IN (SELECT route_id FROM route_tags WHERE tag_name IN ("+tagListClause+") GROUP BY route_id HAVING COUNT(DISTINCT tag_name) = ?)")
+			for _, tag := range criteria.Tags {
+				args = append(args, tag)
+			}
+			args = append(args, len(criteria.Tags))
+		case "NOT":
+
+			// ルートが指定されたタグのいずれも持たない
+			whereClauses = append(whereClauses, "id NOT IN (SELECT route_id FROM route_tags WHERE tag_name IN ("+tagListClause+"))")
+			for _, tag := range criteria.Tags {
+				args = append(args, tag)
+			}
 		}
-		tagClause := "(" + utils.JoinConditions(tagConditions, op) + ")"
-		whereClauses = append(whereClauses, tagClause)
 	}
 
 	// WHERE 句の組み立て: 条件がない場合は常に真となる "1=1" を利用
@@ -219,21 +231,23 @@ func (r *SQLiteRepository) SearchRoutes(criteria *domain.SearchCriteria) ([]doma
 		return nil, 0, err
 	}
 
-	// メインクエリの組み立て: 取得するカラムは RouteSummary に必要なもののみ
-	mainQuery := "SELECT id, title, description, distance, time, tags, likes, image, update_at FROM routes WHERE " + whereSQL
+	// メインクエリの組み立て:
+	// 各ルートのタグは、サブクエリで GROUP_CONCAT を使って連結し、Go 側で分割
+	mainQuery := "SELECT id, title, description, distance, time, likes, image, update_at, " +
+		"(SELECT GROUP_CONCAT(tag_name, '|||') FROM route_tags WHERE route_id = routes.id) as tags " +
+		"FROM routes WHERE " + whereSQL
 
-	// ソート
+	// ソートキー
 	sortKey := criteria.Sort.Key
-	sortOrder := criteria.Sort.Order
-
-	// バリデーションのような処理
-	// 許容するソートキー: "distance", "time", "likes", "update_at"
 	switch sortKey {
 	case "distance", "time", "likes", "update_at":
-		// OK
+		// 有効なキーの場合はそのまま利用
 	default:
 		sortKey = "likes"
 	}
+
+	// ソート順
+	sortOrder := criteria.Sort.Order
 	if sortOrder != "asc" && sortOrder != "desc" {
 		sortOrder = "asc"
 	}
@@ -250,15 +264,15 @@ func (r *SQLiteRepository) SearchRoutes(criteria *domain.SearchCriteria) ([]doma
 
 	// クエリ実行: 中間構造体を利用して結果を一時受け取り
 	var rows []struct {
-		ID          string  `db:"id"`
-		Title       string  `db:"title"`
-		Description string  `db:"description"`
-		Distance    float64 `db:"distance"`
-		Time        int     `db:"time"`
-		Tags        string  `db:"tags"` // JSON 文字列として保存されている
-		Likes       int     `db:"likes"`
-		Image       string  `db:"image"`
-		UpdateAt    string  `db:"update_at"`
+		ID          string         `db:"id"`
+		Title       string         `db:"title"`
+		Description string         `db:"description"`
+		Distance    float64        `db:"distance"`
+		Time        int            `db:"time"`
+		Likes       int            `db:"likes"`
+		Image       string         `db:"image"`
+		UpdateAt    string         `db:"update_at"`
+		Tags        sql.NullString `db:"tags"`
 	}
 	if err := r.db.Select(&rows, mainQuery, args...); err != nil {
 		return nil, 0, err
@@ -268,11 +282,12 @@ func (r *SQLiteRepository) SearchRoutes(criteria *domain.SearchCriteria) ([]doma
 	var summaries []domain.RouteSummary
 	for _, row := range rows {
 		var tags []string
-		// JSON 文字列を配列に変換
-		if err := json.Unmarshal([]byte(row.Tags), &tags); err != nil {
-			logger.Warnning(fmt.Sprint(err), "JSONのデコードに失敗")
-			tags = []string{}
+
+		// タグが存在する場合は分割
+		if row.Tags.Valid && row.Tags.String != "" {
+			tags = strings.Split(row.Tags.String, "|||")
 		}
+
 		// JSON 文字列をTime型に変換
 		updatedAt, err := time.Parse("2006/01/02", row.UpdateAt)
 		if err != nil {
@@ -280,7 +295,7 @@ func (r *SQLiteRepository) SearchRoutes(criteria *domain.SearchCriteria) ([]doma
 			return nil, 0, err
 		}
 
-		// ルートサマリーの作成
+		// サマリー用に画像は配列の最初の要素を利用
 		summary := domain.RouteSummary{
 			ID:          uuid.MustParse(row.ID),
 			Title:       row.Title,
@@ -290,7 +305,7 @@ func (r *SQLiteRepository) SearchRoutes(criteria *domain.SearchCriteria) ([]doma
 			Tags:        tags,
 			Likes:       row.Likes,
 			Image:       row.Image,
-			UpdateAt:    updatedAt,
+			UpdateAt:    updatedAt, // 既に "yyyy/mm/dd" 形式で保存されている前提
 		}
 		summaries = append(summaries, summary)
 	}

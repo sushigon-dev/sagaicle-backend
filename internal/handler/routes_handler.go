@@ -111,8 +111,6 @@ func (h *Handler) SearchRoutes(c *gin.Context) {
 	}
 
 	routes, hitCount, err := h.routesService.SearchRoutes(&criteria)
-	logger.Info("routes", routes)
-	logger.Info("hitCount", hitCount)
 	if err != nil {
 		logger.Error(err, "ルートの検索に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.InternalServer})
