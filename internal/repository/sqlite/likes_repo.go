@@ -13,7 +13,7 @@ func (r *SQLiteRepository) LikeRoute(userID, routeID uuid.UUID) error {
         VALUES (?, ?);
     `
 	if _, err := r.db.Exec(query, userID.String(), routeID.String()); err != nil {
-		logger.LogError(err, "いいねの追加に失敗")
+		logger.Error(err, "いいねの追加に失敗")
 		return err
 	}
 
@@ -22,7 +22,7 @@ func (r *SQLiteRepository) LikeRoute(userID, routeID uuid.UUID) error {
         UPDATE routes SET likes = likes + 1 WHERE id = ?;
     `
 	if _, err := r.db.Exec(updateQuery, routeID.String()); err != nil {
-		logger.LogError(err, "いいね数の更新に失敗")
+		logger.Error(err, "いいね数の更新に失敗")
 		return err
 	}
 
@@ -37,13 +37,13 @@ func (r *SQLiteRepository) DislikeRoute(userID, routeID uuid.UUID) error {
     `
 	res, err := r.db.Exec(query, userID.String(), routeID.String())
 	if err != nil {
-		logger.LogError(err, "いいねの削除に失敗")
+		logger.Error(err, "いいねの削除に失敗")
 		return err
 	}
 
 	affected, err := res.RowsAffected()
 	if err != nil {
-		logger.LogError(err, "いいねの削除に失敗")
+		logger.Error(err, "いいねの削除に失敗")
 		return err
 	}
 
@@ -53,7 +53,7 @@ func (r *SQLiteRepository) DislikeRoute(userID, routeID uuid.UUID) error {
         `
 		_, err = r.db.Exec(updateQuery, routeID.String())
 		if err != nil {
-			logger.LogError(err, "いいね数の更新に失敗")
+			logger.Error(err, "いいね数の更新に失敗")
 		}
 		return err
 	}
@@ -69,7 +69,7 @@ func (r *SQLiteRepository) IsLiked(userID, routeID uuid.UUID) (bool, int, error)
     `
 	var count int
 	if err := r.db.Get(&count, query, userID.String(), routeID.String()); err != nil {
-		logger.LogError(err, "いいねの取得に失敗")
+		logger.Error(err, "いいねの取得に失敗")
 		return false, 0, err
 	}
 
@@ -79,7 +79,7 @@ func (r *SQLiteRepository) IsLiked(userID, routeID uuid.UUID) (bool, int, error)
     `
 	var likes int
 	if err := r.db.Get(&likes, queryTotal, routeID.String()); err != nil {
-		logger.LogError(err, "いいね数の取得に失敗")
+		logger.Error(err, "いいね数の取得に失敗")
 		return false, 0, err
 	}
 

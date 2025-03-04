@@ -17,14 +17,14 @@ func (h *Handler) GetVisitedCheckpoints(c *gin.Context) {
 				routeIDStr := c.Param("route_id")
 				routeID, err := uuid.Parse(routeIDStr)
 				if err != nil {
-		            logger.LogError(err, "route_idのパースに失敗")
+		            logger.Error(err, "route_idのパースに失敗")
 					c.JSON(http.StatusBadRequest, gin.H{"error": })
 					return
 				}
 				userIDStr := c.GetHeader("X-User-ID")
 				userID, err := uuid.Parse(userIDStr)
 				if err != nil {
-		            logger.LogError(err, "X-User-IDのパースに失敗")
+		            logger.Error(err, "X-User-IDのパースに失敗")
 					c.JSON(http.StatusUnauthorized, gin.H{"error": })
 					return
 				}
@@ -32,7 +32,7 @@ func (h *Handler) GetVisitedCheckpoints(c *gin.Context) {
 					// サービス層に実装があると仮定
 					visited, err := h.checkpointsService.VisitCheckpoint(userID, routeID)
 					if err != nil {
-		                logger.LogError(err, "チェックポイント訪問記録の取得に失敗")
+		                logger.Error(err, "チェックポイント訪問記録の取得に失敗")
 						c.JSON(http.StatusInternalServerError, gin.H{"error": })
 						return
 					}
@@ -49,7 +49,7 @@ func (h *Handler) VisitCheckpoint(c *gin.Context) {
 	routeIDStr := c.Param("route_id")
 	routeID, err := uuid.Parse(routeIDStr)
 	if err != nil {
-		logger.LogError(err, "route_idのパースに失敗")
+		logger.Error(err, "route_idのパースに失敗")
 		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InvalidFormat})
 		return
 	}
@@ -57,7 +57,7 @@ func (h *Handler) VisitCheckpoint(c *gin.Context) {
 	cpIndexStr := c.Param("checkpoint_index")
 	cpIndex, err := strconv.Atoi(cpIndexStr)
 	if err != nil {
-		logger.LogError(err, "checkpoint_indexのパースに失敗")
+		logger.Error(err, "checkpoint_indexのパースに失敗")
 		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InvalidFormat})
 		return
 	}
@@ -65,7 +65,7 @@ func (h *Handler) VisitCheckpoint(c *gin.Context) {
 	userIDStr := c.GetHeader("X-User-ID")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		logger.LogError(err, "X-User-IDのパースに失敗")
+		logger.Error(err, "X-User-IDのパースに失敗")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": errors.InvalidFormat})
 		return
 	}
@@ -73,7 +73,7 @@ func (h *Handler) VisitCheckpoint(c *gin.Context) {
 	if err := h.checkpointsService.VisitCheckpoint(
 		userID, routeID, cpIndex,
 	); err != nil {
-		logger.LogError(err, "チェックポイント訪問記録の追加に失敗")
+		logger.Error(err, "チェックポイント訪問記録の追加に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.InternalServer})
 		return
 	}

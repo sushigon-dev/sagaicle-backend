@@ -14,7 +14,7 @@ func (h *Handler) IsLiked(c *gin.Context) {
 	routeIDStr := c.Param("route_id")
 	routeID, err := uuid.Parse(routeIDStr)
 	if err != nil {
-		logger.LogError(err, "route_idのパースに失敗")
+		logger.Error(err, "route_idのパースに失敗")
 		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InvalidFormat})
 		return
 	}
@@ -22,14 +22,14 @@ func (h *Handler) IsLiked(c *gin.Context) {
 	userIDStr := c.GetHeader("X-User-ID")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		logger.LogError(err, "X-User-IDのパースに失敗")
+		logger.Error(err, "X-User-IDのパースに失敗")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": errors.InvalidFormat})
 		return
 	}
 
 	isLiked, likes, err := h.likesService.IsLiked(userID, routeID)
 	if err != nil {
-		logger.LogError(err, "いいねの確認に失敗")
+		logger.Error(err, "いいねの確認に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.InternalServer})
 		return
 	}
@@ -47,7 +47,7 @@ func (h *Handler) LikeRoute(c *gin.Context) {
 	routeIDStr := c.Param("route_id")
 	routeID, err := uuid.Parse(routeIDStr)
 	if err != nil {
-		logger.LogError(err, "route_idのパースに失敗")
+		logger.Error(err, "route_idのパースに失敗")
 		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InvalidFormat})
 		return
 	}
@@ -55,20 +55,20 @@ func (h *Handler) LikeRoute(c *gin.Context) {
 	userIDStr := c.GetHeader("X-User-ID")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		logger.LogError(err, "X-User-IDのパースに失敗")
+		logger.Error(err, "X-User-IDのパースに失敗")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": errors.InvalidFormat})
 		return
 	}
 
 	if err := h.likesService.LikeRoute(userID, routeID); err != nil {
-		logger.LogError(err, "いいねの追加に失敗")
+		logger.Error(err, "いいねの追加に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.InternalServer})
 		return
 	}
 
 	_, likes, err := h.likesService.IsLiked(userID, routeID)
 	if err != nil {
-		logger.LogError(err, "いいねの確認に失敗")
+		logger.Error(err, "いいねの確認に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.InternalServer})
 		return
 	}
@@ -85,7 +85,7 @@ func (h *Handler) DislikeRoute(c *gin.Context) {
 	routeIDStr := c.Param("route_id")
 	routeID, err := uuid.Parse(routeIDStr)
 	if err != nil {
-		logger.LogError(err, "route_idのパースに失敗")
+		logger.Error(err, "route_idのパースに失敗")
 		c.JSON(http.StatusBadRequest, gin.H{"error": errors.InvalidFormat})
 		return
 	}
@@ -93,20 +93,20 @@ func (h *Handler) DislikeRoute(c *gin.Context) {
 	userIDStr := c.GetHeader("X-User-ID")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		logger.LogError(err, "X-User-IDのパースに失敗")
+		logger.Error(err, "X-User-IDのパースに失敗")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": errors.InvalidFormat})
 		return
 	}
 
 	if err := h.likesService.DislikeRoute(userID, routeID); err != nil {
-		logger.LogError(err, "いいねの削除に失敗")
+		logger.Error(err, "いいねの削除に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.InternalServer})
 		return
 	}
 
 	_, likes, err := h.likesService.IsLiked(userID, routeID)
 	if err != nil {
-		logger.LogError(err, "いいねの確認に失敗")
+		logger.Error(err, "いいねの確認に失敗")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.InternalServer})
 		return
 	}
