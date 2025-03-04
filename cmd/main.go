@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,9 @@ import (
 )
 
 func main() {
+	// ログ出力先を標準出力に設定
+	log.SetOutput(os.Stdout)
+
 	// db の設定
 	db := config.DB()
 	defer db.Close()
