@@ -55,6 +55,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
+            bash -c 'export XDG_RUNTIME_DIR=/run/user/$(id -u)'
             cd /home/miray/sushigon/
             chmod +x sagaicle
             systemctl --user daemon-reload && systemctl --user restart sagaicle.service
