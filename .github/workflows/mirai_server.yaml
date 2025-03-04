@@ -43,4 +43,4 @@ jobs:
           script: |
             cd /home/miray/
             chmod +x sagaicle
-            sudo systemctl restart sagaicle.service
+            systemctl --user restart sagaicle.service
